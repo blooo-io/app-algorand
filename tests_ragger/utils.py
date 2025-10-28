@@ -76,3 +76,15 @@ def _read_makefile() -> List[str]:
     with open(makefile, "r", encoding="utf-8") as f_p:
         lines = f_p.readlines()
     return lines
+
+
+def pack_account_id(account_id: int) -> bytes:
+    """Pack an account ID as a 32-bit big-endian unsigned integer.
+
+    Args:
+        account_id (int): The account ID to pack
+
+    Returns:
+        bytes: 4-byte big-endian representation of the account ID
+    """
+    return account_id.to_bytes(4, byteorder="big")

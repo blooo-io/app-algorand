@@ -3,8 +3,8 @@ from typing import Generator, List, Optional
 from contextlib import contextmanager
 
 from ragger.backend.interface import BackendInterface, RAPDU
-from ragger.bip import pack_derivation_path
 
+from ..utils import pack_account_id
 
 MAX_APDU_LEN: int = 255
 
@@ -40,7 +40,7 @@ class InsType(IntEnum):
 
 
 class Errors(IntEnum):
-    SW_DENY = 0x6985
+    SW_DENY = 0x6986
     SW_WRONG_P1P2 = 0x6A86
     SW_WRONG_DATA_LENGTH = 0x6A87
     SW_INS_NOT_SUPPORTED = 0x6D00
@@ -94,27 +94,27 @@ class AlgorandCommandSender:
     #         cla=CLA, ins=InsType.GET_APP_NAME, p1=P1.P1_START, p2=P2.P2_LAST, data=b""
     #     )
 
-    # def get_public_key(self, path: str) -> RAPDU:
-    #     return self.backend.exchange(
-    #         cla=CLA,
-    #         ins=InsType.GET_PUBLIC_KEY,
-    #         p1=P1.P1_START,
-    #         p2=P2.P2_LAST,
-    #         data=pack_derivation_path(path),
-    #     )
+    def get_public_key(self, account_id: int) -> RAPDU:
+        return self.backend.exchange(
+            cla=CLA,
+            ins=InsType.GET_PUBLIC_KEY,
+            p1=P1.P1_START,
+            p2=P2.P2_LAST,
+            data=pack_account_id(account_id),
+        )
 
-    # @contextmanager
-    # def get_public_key_with_confirmation(
-    #     self, path: str
-    # ) -> Generator[None, None, None]:
-    #     with self.backend.exchange_async(
-    #         cla=CLA,
-    #         ins=InsType.GET_PUBLIC_KEY,
-    #         p1=P1.P1_CONFIRM,
-    #         p2=P2.P2_LAST,
-    #         data=pack_derivation_path(path),
-    #     ) as response:
-    #         yield response
+    @contextmanager
+    def get_public_key_with_confirmation(
+        self, account_id: int
+    ) -> Generator[None, None, None]:
+        with self.backend.exchange_async(
+            cla=CLA,
+            ins=InsType.GET_PUBLIC_KEY,
+            p1=P1.P1_CONFIRM,
+            p2=P2.P2_LAST,
+            data=pack_account_id(account_id),
+        ) as response:
+            yield response
 
     # @contextmanager
     # def sign_tx(self, path: str, transaction: bytes) -> Generator[None, None, None]:
@@ -139,8 +139,8 @@ class AlgorandCommandSender:
     #     ) as response:
     #         yield response
 
-    # def get_async_response(self) -> Optional[RAPDU]:
-    #     return self.backend.last_async_response
+    def get_async_response(self) -> Optional[RAPDU]:
+        return self.backend.last_async_response
 
     # def sign_tx_sync(self, path: str, transaction: bytes) -> Optional[RAPDU]:
     #     with self.sign_tx(path, transaction):

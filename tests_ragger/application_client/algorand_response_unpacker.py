@@ -17,9 +17,12 @@ from struct import unpack
 
 
 # Unpack from response:
-# response = MAJOR (1)
-#            MINOR (1)
-#            PATCH (1)
+# response = test_mode (1)
+#            MAJOR (2)
+#            MINOR (2)
+#            PATCH (2)
+#            locked (1)
+#            target_id (4)
 def unpack_get_version_response(response: bytes) -> Tuple[int, int, int, int, int, int]:
     print(
         f"km-logs - [algorand_response_unpacker.py] (unpack_get_version_response) - length: {len(response)}"
@@ -48,20 +51,40 @@ def unpack_get_version_response(response: bytes) -> Tuple[int, int, int, int, in
 
 #     return app_name_raw.decode("ascii"), version_raw.decode("ascii")
 
-# # Unpack from response:
-# # response = pub_key_len (1)
-# #            pub_key (var)
-# #            chain_code_len (1)
-# #            chain_code (var)
-# def unpack_get_public_key_response(response: bytes) -> Tuple[int, bytes, int, bytes]:
-#     response, pub_key_len, pub_key = pop_size_prefixed_buf_from_buf(response)
-#     response, chain_code_len, chain_code = pop_size_prefixed_buf_from_buf(response)
 
-#     assert pub_key_len == 65
-#     assert chain_code_len == 32
-#     assert len(response) == 0
+# Unpack from response:
+# response = pub_key_len (1)
+#            pub_key (var)
+#            chain_code_len (1)
+#            chain_code (var)
+def unpack_get_public_key_response(response: bytes) -> Tuple[int, bytes, int, bytes]:
+    print(
+        f"km-logs - [algorand_response_unpacker.py] (unpack_get_public_key_response) - length: {len(response)}"
+    )
+    print(
+        f"km-logs - [algorand_response_unpacker.py] (unpack_get_public_key_response) - response.hex(): {response.hex()}"
+    )
 
-#     return pub_key_len, pub_key, chain_code_len, chain_code
+    PUBKEY_LEN = 32
+    ADDRESS_LEN = 58
+    pubkey = response[:PUBKEY_LEN]
+
+    address = response[PUBKEY_LEN : PUBKEY_LEN + ADDRESS_LEN]
+    print(
+        f"km-logs - [algorand_response_unpacker.py] (unpack_get_public_key_response) - left in response: {len(response[PUBKEY_LEN+ADDRESS_LEN:])}"
+    )
+
+    return PUBKEY_LEN, pubkey, ADDRESS_LEN, address
+
+    # response, pub_key_len, pub_key = pop_size_prefixed_buf_from_buf(response)
+    # response, chain_code_len, chain_code = pop_size_prefixed_buf_from_buf(response)
+
+    # assert pub_key_len == 65
+    # assert chain_code_len == 32
+    # assert len(response) == 0
+
+    # return pub_key_len, pub_key, chain_code_len, chain_code
+
 
 # # Unpack from response:
 # # response = der_sig_len (1)
