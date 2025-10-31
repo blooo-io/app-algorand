@@ -9,4 +9,4 @@
 	url = https://github.com/LedgerHQ/ledger-secure-sdk
 [submodule "js"]
 	path = js
-	url = https://github.com/Zondax/ledger-algorand-js
+	url = https://github.com/blooo-io/ledger-algorand-js
