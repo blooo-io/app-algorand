@@ -77,20 +77,21 @@ typedef enum tx_type_e {
 #define KEY_CONFIG_ID     "caid"
 #define KEY_CONFIG_PARAMS "apar"
 
-#define KEY_APP_ID             "apid"
-#define KEY_APP_ARGS           "apaa"
-#define KEY_APP_EXTRA_PAGES    "apep"
-#define KEY_APP_APROG_LEN      "apap"
-#define KEY_APP_CPROG_LEN      "apsu"
-#define KEY_APP_ONCOMPLETION   "apan"
-#define KEY_APP_ACCOUNTS       "apat"
-#define KEY_APP_LOCAL_SCHEMA   "apls"
-#define KEY_APP_GLOBAL_SCHEMA  "apgs"
-#define KEY_APP_FOREIGN_APPS   "apfa"
-#define KEY_APP_FOREIGN_ASSETS "apas"
-#define KEY_APP_BOXES          "apbx"
-#define KEY_APP_BOX_INDEX      "i"
-#define KEY_APP_BOX_NAME       "n"
+#define KEY_APP_ID                "apid"
+#define KEY_APP_ARGS              "apaa"
+#define KEY_APP_EXTRA_PAGES       "apep"
+#define KEY_APP_APROG_LEN         "apap"
+#define KEY_APP_CPROG_LEN         "apsu"
+#define KEY_APP_ONCOMPLETION      "apan"
+#define KEY_APP_ACCOUNTS          "apat"
+#define KEY_APP_LOCAL_SCHEMA      "apls"
+#define KEY_APP_GLOBAL_SCHEMA     "apgs"
+#define KEY_APP_FOREIGN_APPS      "apfa"
+#define KEY_APP_FOREIGN_ASSETS    "apas"
+#define KEY_APP_BOXES             "apbx"
+#define KEY_APP_REJECT_VERSION    "aprv"
+#define KEY_APP_BOX_INDEX         "i"
+#define KEY_APP_BOX_NAME          "n"
 
 #define KEY_APARAMS_TOTAL         "t"
 #define KEY_APARAMS_DECIMALS      "dc"
@@ -192,18 +193,19 @@ typedef struct {
 } txn_asset_config;
 
 typedef struct {
-    uint8_t num_accounts;
-    uint8_t num_foreign_apps;
-    uint8_t num_foreign_assets;
-    uint8_t num_boxes;
-    uint8_t num_app_args;
-    uint8_t extra_pages;
-    uint16_t aprog_len;
-    uint16_t cprog_len;
-    uint64_t id;
-    uint64_t oncompletion;
-    state_schema local_schema;
-    state_schema global_schema;
+  uint8_t num_accounts;
+  uint8_t num_foreign_apps;
+  uint8_t num_foreign_assets;
+  uint8_t num_boxes;
+  uint8_t num_app_args;
+  uint8_t extra_pages;
+  uint16_t aprog_len;
+  uint16_t cprog_len;
+  uint64_t id;
+  uint64_t oncompletion;
+  uint64_t reject_version;
+  state_schema local_schema;
+  state_schema global_schema;
 
     const uint8_t *aprog;
     const uint8_t *cprog;
@@ -302,18 +304,19 @@ typedef enum {
 } txn_asset_config_index_e;
 
 typedef enum {
-    IDX_APP_ID = 0,
-    IDX_ON_COMPLETION,
-    IDX_BOXES,
-    IDX_FOREIGN_APP,
-    IDX_FOREIGN_ASSET,
-    IDX_ACCOUNTS,
-    IDX_APP_ARGS,
-    IDX_GLOBAL_SCHEMA,
-    IDX_LOCAL_SCHEMA,
-    IDX_EXTRA_PAGES,
-    IDX_APPROVE,
-    IDX_CLEAR,
+  IDX_APP_ID = 0,
+  IDX_REJECT_VERSION,
+  IDX_ON_COMPLETION,
+  IDX_BOXES,
+  IDX_FOREIGN_APP,
+  IDX_FOREIGN_ASSET,
+  IDX_ACCOUNTS,
+  IDX_APP_ARGS,
+  IDX_GLOBAL_SCHEMA,
+  IDX_LOCAL_SCHEMA,
+  IDX_EXTRA_PAGES,
+  IDX_APPROVE,
+  IDX_CLEAR,
 } txn_application_index_e;
 
 typedef enum {
