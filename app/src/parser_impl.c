@@ -1177,11 +1177,17 @@ static parser_error_t _readTxApplication(parser_context_t *c, parser_tx_t *v)
     application->oncompletion = NOOPOC;
     application->aprog_len = 0;
     application->cprog_len = 0;
+    application->reject_version = 0;
 
     if (_findKey(c, KEY_APP_ID) == parser_ok) {
         CHECK_ERROR(_readInteger(c, &application->id))
     }
     DISPLAY_ITEM(IDX_APP_ID, 1, tx_num_items)
+
+    if (_findKey(c, KEY_APP_REJECT_VERSION) == parser_ok) {
+        CHECK_ERROR(_readInteger(c, &application->reject_version))
+        DISPLAY_ITEM(IDX_REJECT_VERSION, 1, tx_num_items)
+    }
 
     if (_findKey(c, KEY_APP_ONCOMPLETION) == parser_ok) {
         CHECK_ERROR(_readInteger(c, &application->oncompletion))

@@ -89,6 +89,7 @@ typedef enum tx_type_e {
 #define KEY_APP_FOREIGN_APPS      "apfa"
 #define KEY_APP_FOREIGN_ASSETS    "apas"
 #define KEY_APP_BOXES             "apbx"
+#define KEY_APP_REJECT_VERSION    "aprv"
 #define KEY_APP_BOX_INDEX         "i"
 #define KEY_APP_BOX_NAME          "n"
 
@@ -203,6 +204,7 @@ typedef struct {
   uint16_t cprog_len;
   uint64_t id;
   uint64_t oncompletion;
+  uint64_t reject_version;
   state_schema local_schema;
   state_schema global_schema;
 
@@ -305,6 +307,7 @@ typedef enum {
 
 typedef enum {
   IDX_APP_ID = 0,
+  IDX_REJECT_VERSION,
   IDX_ON_COMPLETION,
   IDX_BOXES,
   IDX_FOREIGN_APP,
