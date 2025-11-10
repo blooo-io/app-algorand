@@ -33,18 +33,21 @@ class P2(IntEnum):
 
 class InsType(IntEnum):
     GET_VERSION = 0x00
-    GET_APP_NAME = 0x04  # Correct (not in spec but keeping)
     GET_PUBLIC_KEY = 0x03
+    GET_ADDRESS = 0x04
     SIGN_MSGPACK = 0x08
     SIGN_ARBITRARY_DATA = 0x10
 
 
 class Errors(IntEnum):
-    SW_DENY = 0x6986
-    SW_WRONG_P1P2 = 0x6A86
+    # Predefined error codes
+    SW_SUCCESS = 0x9000
+    SW_CONDITIONS_NOT_SATISFIED = 0x6985
+    SW_COMMAND_NOT_ALLOWED_EF = 0x6986
+    SW_INCORRECT_P1_P2 = 0x6A86
     SW_WRONG_DATA_LENGTH = 0x6A87
-    SW_INS_NOT_SUPPORTED = 0x6D00
-    SW_CLA_NOT_SUPPORTED = 0x6E00
+    SW_INVALID_INS = 0x6D00
+    SW_INVALID_CLA = 0x6E00
     SW_WRONG_RESPONSE_LENGTH = 0xB000
     SW_DISPLAY_BIP32_PATH_FAIL = 0xB001
     SW_DISPLAY_ADDRESS_FAIL = 0xB002
@@ -94,15 +97,29 @@ class AlgorandCommandSender:
     #         cla=CLA, ins=InsType.GET_APP_NAME, p1=P1.P1_START, p2=P2.P2_LAST, data=b""
     #     )
 
-    def get_public_key(self, account_id: int) -> RAPDU:
+    @contextmanager
+    def get_address_and_public_key_with_confirmation(
+        self, account_id: int
+    ) -> Generator[None, None, None]:
+        with self.backend.exchange_async(
+            cla=CLA,
+            ins=InsType.GET_ADDRESS,
+            p1=P1.P1_CONFIRM,
+            p2=P2.P2_LAST,
+            data=pack_account_id(account_id),
+        ) as response:
+            yield response
+
+    def get_address_and_public_key(self, account_id: int) -> RAPDU:
         return self.backend.exchange(
             cla=CLA,
-            ins=InsType.GET_PUBLIC_KEY,
+            ins=InsType.GET_ADDRESS,
             p1=P1.P1_START,
             p2=P2.P2_LAST,
             data=pack_account_id(account_id),
         )
 
+    # Deprecated use get_address_and_public_key instead
     @contextmanager
     def get_public_key_with_confirmation(
         self, account_id: int
@@ -115,6 +132,16 @@ class AlgorandCommandSender:
             data=pack_account_id(account_id),
         ) as response:
             yield response
+
+    # Deprecated use get_address_and_public_key instead
+    def get_public_key(self, account_id: int) -> RAPDU:
+        return self.backend.exchange(
+            cla=CLA,
+            ins=InsType.GET_PUBLIC_KEY,
+            p1=P1.P1_START,
+            p2=P2.P2_LAST,
+            data=pack_account_id(account_id),
+        )
 
     # @contextmanager
     # def sign_tx(self, path: str, transaction: bytes) -> Generator[None, None, None]:
