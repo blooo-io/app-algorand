@@ -1,8 +1,8 @@
 from enum import IntEnum
-from typing import Generator, List, Optional
+from typing import Generator, Optional
 from contextlib import contextmanager
 
-from ragger.backend.interface import BackendInterface, RAPDU
+from ragger.backend.interface import BackendInterface, RAPDU  # type: ignore
 
 from ..utils import pack_account_id
 

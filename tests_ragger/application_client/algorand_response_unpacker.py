@@ -24,11 +24,11 @@ from struct import unpack
 #            locked (1)
 #            target_id (4)
 def unpack_get_version_response(response: bytes) -> Tuple[int, int, int, int, int, int]:
-    print(
-        f"km-logs - [algorand_response_unpacker.py] (unpack_get_version_response) - length: {len(response)}"
-    )
     assert len(response) == 12  # 000002000500070033000004
-    # Format: >B = test (1 byte), HHH = major/minor/patch (3x 2-byte big-endian), B = locked (1 byte), I = target_id (4-byte big-endian)
+    # Format: >B = test (1 byte), 
+    #         HHH = major/minor/patch (3x 2-byte big-endian), 
+    #         B = locked (1 byte), 
+    #         I = target_id (4-byte big-endian)
     test_mode, major, minor, patch, locked, target_id = unpack(">BHHHBI", response)
     return (test_mode, major, minor, patch, locked, target_id)
 
@@ -58,21 +58,12 @@ def unpack_get_version_response(response: bytes) -> Tuple[int, int, int, int, in
 #            chain_code_len (1)
 #            chain_code (var)
 def unpack_get_public_key_response(response: bytes) -> Tuple[int, bytes, int, bytes]:
-    print(
-        f"km-logs - [algorand_response_unpacker.py] (unpack_get_public_key_response) - length: {len(response)}"
-    )
-    print(
-        f"km-logs - [algorand_response_unpacker.py] (unpack_get_public_key_response) - response.hex(): {response.hex()}"
-    )
 
     PUBKEY_LEN = 32
     ADDRESS_LEN = 58
     pubkey = response[:PUBKEY_LEN]
 
     address = response[PUBKEY_LEN : PUBKEY_LEN + ADDRESS_LEN]
-    print(
-        f"km-logs - [algorand_response_unpacker.py] (unpack_get_public_key_response) - left in response: {len(response[PUBKEY_LEN+ADDRESS_LEN:])}"
-    )
 
     return PUBKEY_LEN, pubkey, ADDRESS_LEN, address
 

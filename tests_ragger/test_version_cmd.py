@@ -17,7 +17,4 @@ def test_version(backend: BackendInterface) -> None:
     TEST_MODE, MAJOR, MINOR, PATCH, LOCKED, TARGET_ID = unpack_get_version_response(
         rapdu.data
     )
-    print(
-        f"km-logs - [test_version_cmd.py] test_version - Version: {MAJOR}.{MINOR}.{PATCH}"
-    )
     verify_version(f"{MAJOR}.{MINOR}.{PATCH}")

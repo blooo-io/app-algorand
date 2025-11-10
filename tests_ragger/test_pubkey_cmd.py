@@ -57,12 +57,6 @@ def test_get_public_key_confirm_accepted(
     response = client.get_async_response().data
     _, public_key, _, address = unpack_get_public_key_response(response)
 
-    print(
-        f"km-logs - [test_pubkey_cmd.py] (test_get_public_key_confirm_accepted) - address decoded: {address.decode('ascii')}"
-    )
-    print(
-        f"km-logs - [test_pubkey_cmd.py] (test_get_public_key_confirm_accepted) - expected_address: {expected_address}"
-    )
 
     assert public_key.hex() == expected_public_key
     assert address.decode("ascii") == expected_address
@@ -142,13 +136,6 @@ def test_get_address_and_public_key_confirm_accepted(
 
     response = client.get_async_response().data
     _, public_key, _, address = unpack_get_public_key_response(response)
-
-    print(
-        f"km-logs - [test_pubkey_cmd.py] (test_get_address_and_public_key_confirm_accepted) - address decoded: {address.decode('ascii')}"
-    )
-    print(
-        f"km-logs - [test_pubkey_cmd.py] (test_get_address_and_public_key_confirm_accepted) - expected_address: {expected_address}"
-    )
 
     assert public_key.hex() == expected_public_key
     assert address.decode("ascii") == expected_address
