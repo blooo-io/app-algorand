@@ -8,7 +8,7 @@ def test_app_mainmenu(device: Device,
                       test_name: str,
                       default_screenshot_path: str) -> None:
     
-    #nav: mainmenu, click on settings,  toogle first setting (expert mode) *2,  go to next screen *2, exit settings 
+    #nav: mainmenu, click on settings,  toggle first setting (expert mode) *2,  go to next screen *2, exit settings 
     # Navigate in the main menu
     instructions = []
     if device.is_nano:
