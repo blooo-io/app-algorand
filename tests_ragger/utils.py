@@ -3,28 +3,42 @@ from pathlib import Path
 from typing import List
 import re
 
-# from Crypto.Hash import keccak
-
-# from ecdsa.curves import SECP256k1
-# from ecdsa.keys import VerifyingKey
-# from ecdsa.util import sigdecode_der
+import ed25519
 
 
-# # Check if a signature of a given message is valid
-# def check_signature_validity(public_key: bytes, signature: bytes, message: bytes) -> bool:
-#     pk: VerifyingKey = VerifyingKey.from_string(
-#         public_key,
-#         curve=SECP256k1,
-#         hashfunc=None
-#     )
-#     # Compute message hash (keccak_256)
-#     k = keccak.new(digest_bits=256)
-#     k.update(message)
-#     message_hash = k.digest()
+# Check if a signature of a given message is valid
+def check_signature_validity(
+    public_key: bytes, signature: bytes, message: bytes
+) -> bool:
+    """Verify Ed25519 signature for Algorand transaction.
 
-#     return pk.verify_digest(signature=signature,
-#                      digest=message_hash,
-#                      sigdecode=sigdecode_der)
+    Algorand transactions are signed with a "TX" prefix as per the Algorand protocol.
+    The signature is Ed25519 in raw 64-byte format (not DER encoded).
+
+    Args:
+        public_key: 32-byte Ed25519 public key
+        signature: 64-byte Ed25519 signature
+        message: Transaction bytes (will be prefixed with "TX")
+
+    Returns:
+        True if signature is valid, False otherwise
+    """
+    try:
+        # Create verifying key from public key bytes
+        verifying_key = ed25519.VerifyingKey(public_key)
+
+        # Algorand protocol: prepend "TX" to the transaction bytes before signing
+        prefixed_message = b"TX" + message
+
+        # Verify the signature (raises BadSignatureError if invalid)
+        verifying_key.verify(signature, prefixed_message)
+        return True
+    except ed25519.BadSignatureError:
+        # Signature verification failed
+        return False
+    except Exception:
+        # Other errors (e.g., invalid key format)
+        return False
 
 
 # def verify_name(name: str) -> None:

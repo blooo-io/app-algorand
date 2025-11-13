@@ -1,12 +1,13 @@
 from enum import IntEnum
 from typing import Generator, Optional
 from contextlib import contextmanager
+from typing import List
 
 from ragger.backend.interface import BackendInterface, RAPDU  # type: ignore
 
 from ..utils import pack_account_id
 
-MAX_APDU_LEN: int = 255
+MAX_APDU_LEN: int = 250
 
 CLA: int = 0x80
 
@@ -14,6 +15,8 @@ CLA: int = 0x80
 class P1(IntEnum):
     # Parameter 1 for first APDU number.
     P1_START = 0x00
+    # Parameter 1 for first account ID
+    P1_FIRST_ACCOUNT_ID = 0x01
     # Parameter 1 for maximum APDU number.
     P1_MAX = 0x03
     # Parameter 1 for screen confirmation for GET_PUBLIC_KEY.
@@ -70,8 +73,15 @@ class Errors(IntEnum):
     SW_FAILED_HD_PATH = 0x698F
 
 
-# def split_message(message: bytes, max_size: int) -> List[bytes]:
-#     return [message[x : x + max_size] for x in range(0, len(message), max_size)]
+def split_message(message: bytes, max_size: int) -> List[bytes]:
+    return [message[x : x + max_size] for x in range(0, len(message), max_size)]
+
+
+def add_account_id_to_message(message: bytes, account_id: int) -> bytes:
+    if account_id != 0:
+        return pack_account_id(account_id) + message
+    else:
+        return message
 
 
 class AlgorandCommandSender:
@@ -143,28 +153,39 @@ class AlgorandCommandSender:
             data=pack_account_id(account_id),
         )
 
-    # @contextmanager
-    # def sign_tx(self, path: str, transaction: bytes) -> Generator[None, None, None]:
-    #     self.backend.exchange(
-    #         cla=CLA,
-    #         ins=InsType.SIGN_TX,
-    #         p1=P1.P1_START,
-    #         p2=P2.P2_MORE,
-    #         data=pack_derivation_path(path),
-    #     )
-    #     messages = split_message(transaction, MAX_APDU_LEN)
-    #     idx: int = P1.P1_START + 1
+    @contextmanager
+    def sign_tx(
+        self, account_id: int, transaction: bytes
+    ) -> Generator[None, None, None]:
+        message = add_account_id_to_message(transaction, account_id)
+        chunks = split_message(message, MAX_APDU_LEN)
+        num_of_chunks = len(chunks)
+        p1 = P1.P1_FIRST_ACCOUNT_ID if account_id != 0 else P1.P1_START
+        p2 = P2.P2_MORE if len(chunks) > 1 else P2.P2_LAST
 
-    #     for msg in messages[:-1]:
-    #         self.backend.exchange(
-    #             cla=CLA, ins=InsType.SIGN_TX, p1=idx, p2=P2.P2_MORE, data=msg
-    #         )
-    #         idx += 1
+        # Send all chunks except the last one
+        if num_of_chunks > 1:
+            for i in range(1, num_of_chunks - 1):
+                rapdu = self.backend.exchange(
+                    cla=CLA,
+                    ins=InsType.SIGN_MSGPACK,
+                    p1=p1 if i == 1 else P1.P1_MORE,
+                    p2=P2.P2_MORE,
+                    data=chunks[i],
+                )
 
-    #     with self.backend.exchange_async(
-    #         cla=CLA, ins=InsType.SIGN_TX, p1=idx, p2=P2.P2_LAST, data=messages[-1]
-    #     ) as response:
-    #         yield response
+                if rapdu.status != Errors.SW_SUCCESS:
+                    raise Exception(f"Error signing chunk {i}: {rapdu.status}")
+
+        # Send the last chunk
+        with self.backend.exchange_async(
+            cla=CLA,
+            ins=InsType.SIGN_MSGPACK,
+            p1=P1.P1_MORE if len(chunks) > 1 else P1.P1_FIRST_ACCOUNT_ID,
+            p2=P2.P2_LAST,
+            data=chunks[-1],
+        ) as response:
+            yield response
 
     def get_async_response(self) -> Optional[RAPDU]:
         return self.backend.last_async_response
