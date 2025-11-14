@@ -25,9 +25,9 @@ from struct import unpack
 #            target_id (4)
 def unpack_get_version_response(response: bytes) -> Tuple[int, int, int, int, int, int]:
     assert len(response) == 12  # 000002000500070033000004
-    # Format: >B = test (1 byte), 
-    #         HHH = major/minor/patch (3x 2-byte big-endian), 
-    #         B = locked (1 byte), 
+    # Format: >B = test (1 byte),
+    #         HHH = major/minor/patch (3x 2-byte big-endian),
+    #         B = locked (1 byte),
     #         I = target_id (4-byte big-endian)
     test_mode, major, minor, patch, locked, target_id = unpack(">BHHHBI", response)
     return (test_mode, major, minor, patch, locked, target_id)

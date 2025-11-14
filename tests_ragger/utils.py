@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import List
 import re
 
-import ed25519
+import ed25519  # type: ignore[import-not-found]
 
 
 # Check if a signature of a given message is valid

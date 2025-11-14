@@ -1,15 +1,18 @@
 from enum import IntEnum
-from typing import Generator, Optional
+from typing import Generator, Optional, List
 from contextlib import contextmanager
-from typing import List
 
-from ragger.backend.interface import BackendInterface, RAPDU  # type: ignore
+from ragger.backend.interface import BackendInterface, RAPDU  # type: ignore  # pylint: disable=import-error
 
 from ..utils import pack_account_id
 
 MAX_APDU_LEN: int = 250
 
 CLA: int = 0x80
+
+
+class AlgorandSigningError(Exception):
+    """Exception raised when signing a transaction chunk fails."""
 
 
 class P1(IntEnum):
@@ -80,8 +83,8 @@ def split_message(message: bytes, max_size: int) -> List[bytes]:
 def add_account_id_to_message(message: bytes, account_id: int) -> bytes:
     if account_id != 0:
         return pack_account_id(account_id) + message
-    else:
-        return message
+
+    return message
 
 
 class AlgorandCommandSender:
@@ -163,10 +166,10 @@ class AlgorandCommandSender:
         chunks = split_message(message, MAX_APDU_LEN)
         # Get the number of chunks
         num_of_chunks = len(chunks)
-        # Set the p1 value
+        # Sπaet the p1 value
         p1 = P1.P1_FIRST_ACCOUNT_ID if account_id != 0 else P1.P1_START
         # Set the p2 value
-        p2 = P2.P2_MORE if len(chunks) > 1 else P2.P2_LAST
+        p2 = P2.P2_MORE if num_of_chunks > 1 else P2.P2_LAST
 
         # Send all chunks except the last one
         if num_of_chunks > 1:
@@ -175,19 +178,19 @@ class AlgorandCommandSender:
                     cla=CLA,
                     ins=InsType.SIGN_MSGPACK,
                     p1=p1 if i == 0 else P1.P1_MORE,
-                    p2=P2.P2_MORE,
+                    p2=p2,
                     data=chunks[i],
                 )
 
                 if rapdu.status != Errors.SW_SUCCESS:
-                    raise Exception(f"Error signing chunk {i}: {rapdu.status}")
+                    raise AlgorandSigningError(f"Error after sending chunk number {i}: {rapdu.status}")
 
         # Send the last chunk
         with self.backend.exchange_async(
             cla=CLA,
             ins=InsType.SIGN_MSGPACK,
             p1=P1.P1_MORE if len(chunks) > 1 else P1.P1_FIRST_ACCOUNT_ID,
-            p2=P2.P2_LAST,
+            p2=p2,
             data=chunks[-1],
         ) as response:
             yield response
