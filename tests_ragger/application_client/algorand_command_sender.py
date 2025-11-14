@@ -157,19 +157,24 @@ class AlgorandCommandSender:
     def sign_tx(
         self, account_id: int, transaction: bytes
     ) -> Generator[None, None, None]:
+        # Add the account id to the transaction
         message = add_account_id_to_message(transaction, account_id)
+        # Split the transaction into chunks
         chunks = split_message(message, MAX_APDU_LEN)
+        # Get the number of chunks
         num_of_chunks = len(chunks)
+        # Set the p1 value
         p1 = P1.P1_FIRST_ACCOUNT_ID if account_id != 0 else P1.P1_START
+        # Set the p2 value
         p2 = P2.P2_MORE if len(chunks) > 1 else P2.P2_LAST
 
         # Send all chunks except the last one
         if num_of_chunks > 1:
-            for i in range(1, num_of_chunks - 1):
+            for i in range(0, num_of_chunks - 1):
                 rapdu = self.backend.exchange(
                     cla=CLA,
                     ins=InsType.SIGN_MSGPACK,
-                    p1=p1 if i == 1 else P1.P1_MORE,
+                    p1=p1 if i == 0 else P1.P1_MORE,
                     p2=P2.P2_MORE,
                     data=chunks[i],
                 )
