@@ -168,8 +168,6 @@ class AlgorandCommandSender:
         num_of_chunks = len(chunks)
         # Sπaet the p1 value
         p1 = P1.P1_FIRST_ACCOUNT_ID if account_id != 0 else P1.P1_START
-        # Set the p2 value
-        p2 = P2.P2_MORE if num_of_chunks > 1 else P2.P2_LAST
 
         # Send all chunks except the last one
         if num_of_chunks > 1:
@@ -178,7 +176,7 @@ class AlgorandCommandSender:
                     cla=CLA,
                     ins=InsType.SIGN_MSGPACK,
                     p1=p1 if i == 0 else P1.P1_MORE,
-                    p2=p2,
+                    p2=P2.P2_MORE,
                     data=chunks[i],
                 )
 
@@ -190,7 +188,7 @@ class AlgorandCommandSender:
             cla=CLA,
             ins=InsType.SIGN_MSGPACK,
             p1=P1.P1_MORE if len(chunks) > 1 else P1.P1_FIRST_ACCOUNT_ID,
-            p2=p2,
+            p2=P2.P2_LAST,
             data=chunks[-1],
         ) as response:
             yield response
