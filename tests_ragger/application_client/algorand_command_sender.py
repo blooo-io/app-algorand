@@ -105,8 +105,7 @@ def serialize_encoding(encoding: str) -> bytes:
     """
     if encoding == "base64":
         return b"\x01"
-
-    elif encoding == "wrong_encoding":
+    if encoding == "wrong_encoding":
         return b"\x99"
     raise ValueError(f"Unsupported encoding: {encoding}")
 
@@ -399,9 +398,7 @@ class AlgorandCommandSender:
 
         return bytes(message_buffer)
 
-    def _send_sign_data_chunks(
-        self, chunks: List[bytes], p1_add: int, p1_last: int, p2: int
-    ) -> None:
+    def _send_sign_data_chunks(self, chunks: List[bytes], p1_add: int, p2: int) -> None:
         """Send all chunks except the last one.
 
         Args:
@@ -483,7 +480,7 @@ class AlgorandCommandSender:
             raise AlgorandSigningError(f"Error sending path: {rapdu.status}")
 
         # Send all chunks except the last one
-        self._send_sign_data_chunks(chunks, P1_ADD, P1_LAST, p2)
+        self._send_sign_data_chunks(chunks, P1_ADD, p2)
 
         # Send the last chunk with exchange_async
         with self.backend.exchange_async(
