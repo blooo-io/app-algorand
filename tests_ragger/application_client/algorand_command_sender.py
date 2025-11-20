@@ -108,8 +108,7 @@ def serialize_encoding(encoding: str) -> bytes:
 
     elif encoding == "wrong_encoding":
         return b"\x99"
-    else:
-        raise ValueError(f"Unsupported encoding: {encoding}")
+    raise ValueError(f"Unsupported encoding: {encoding}")
 
 
 def serialize_path(path: str) -> bytes:
@@ -154,17 +153,17 @@ def serialize_path(path: str) -> bytes:
             hardening = HARDENED
             try:
                 value = int(component[:-1])
-            except ValueError:
+            except ValueError as exc:
                 raise ValueError(
                     f"Invalid path: {component} is not a number. (e.g \"m/44'/1'/5'/0/3\")"
-                )
+                ) from exc
         else:
             try:
                 value = int(component)
-            except ValueError:
+            except ValueError as exc:
                 raise ValueError(
                     f"Invalid path: {component} is not a number. (e.g \"m/44'/1'/5'/0/3\")"
-                )
+                ) from exc
 
         if value >= HARDENED:
             raise ValueError("Incorrect child value (bigger or equal to 0x80000000)")
@@ -286,6 +285,149 @@ class AlgorandCommandSender:
         ) as response:
             yield response
 
+    def _prepare_sign_data_buffers(
+        self, auth_request: StdSigData, metadata: StdSignMetadata
+    ) -> tuple[bytes, bytes, bytes, bytes, bytes, bytes, bytes]:
+        """Prepare buffers for signing arbitrary data.
+
+        Args:
+            auth_request: The signature request data
+            metadata: Metadata including scope and encoding
+
+        Returns:
+            Tuple of (signer, scope, encoding, data, domain, request_id, auth_data) buffers
+        """
+        # Handle data - can be base64 string or raw bytes
+        if isinstance(auth_request.data, bytes):
+            decoded_data = auth_request.data
+        else:
+            decoded_data = base64.b64decode(auth_request.data)
+
+        # Prepare all buffers
+        signer_buffer = auth_request.signer
+        scope_buffer = bytes([metadata.scope])
+        encoding_buffer = serialize_encoding(metadata.encoding)
+        data_buffer = decoded_data
+        domain_buffer = auth_request.domain.encode() if auth_request.domain else b""
+
+        # Handle requestId - can be either base64 string or bytes
+        if auth_request.requestId:
+            if isinstance(auth_request.requestId, str):
+                request_id_buffer = base64.b64decode(auth_request.requestId)
+            else:
+                request_id_buffer = auth_request.requestId
+        else:
+            request_id_buffer = b""
+
+        auth_data_buffer = (
+            auth_request.authenticationData if auth_request.authenticationData else b""
+        )
+
+        return (
+            signer_buffer,
+            scope_buffer,
+            encoding_buffer,
+            data_buffer,
+            domain_buffer,
+            request_id_buffer,
+            auth_data_buffer,
+        )
+
+    def _build_sign_data_message(
+        self,
+        signer: bytes,
+        scope: bytes,
+        encoding: bytes,
+        data: bytes,
+        domain: bytes,
+        request_id: bytes,
+        auth_data: bytes,
+    ) -> bytes:
+        """Build the message buffer for signing arbitrary data.
+
+        Args:
+            signer: Signer buffer
+            scope: Scope buffer
+            encoding: Encoding buffer
+            data: Data buffer
+            domain: Domain buffer
+            request_id: Request ID buffer
+            auth_data: Authentication data buffer
+
+        Returns:
+            bytes: Complete message buffer
+        """
+        # Calculate message size with variable length fields (2-byte prefixes)
+        message_size = (
+            len(signer)
+            + len(scope)
+            + len(encoding)
+            + 2
+            + len(data)
+            + 2
+            + len(domain)
+            + 2
+            + len(request_id)
+            + 2
+            + len(auth_data)
+        )
+
+        # Build the message buffer
+        message_buffer = bytearray(message_size)
+        offset = 0
+
+        def write_field(buffer: bytes, variable_length: bool = False) -> None:
+            nonlocal offset
+            if variable_length:
+                # Write 2-byte big-endian length prefix
+                message_buffer[offset : offset + 2] = len(buffer).to_bytes(
+                    2, byteorder="big"
+                )
+                offset += 2
+            # Copy buffer data
+            message_buffer[offset : offset + len(buffer)] = buffer
+            offset += len(buffer)
+
+        # Write all fields in order
+        write_field(signer)
+        write_field(scope)
+        write_field(encoding)
+        write_field(data, True)
+        write_field(domain, True)
+        write_field(request_id, True)
+        write_field(auth_data, True)
+
+        return bytes(message_buffer)
+
+    def _send_sign_data_chunks(
+        self, chunks: List[bytes], p1_add: int, p1_last: int, p2: int
+    ) -> None:
+        """Send all chunks except the last one.
+
+        Args:
+            chunks: List of data chunks
+            p1_add: P1 value for intermediate chunks
+            p1_last: P1 value for last chunk (unused here)
+            p2: P2 value
+
+        Raises:
+            AlgorandSigningError: If sending chunks fails
+        """
+        if len(chunks) > 1:
+            for i in range(0, len(chunks) - 1):
+                rapdu = self.backend.exchange(
+                    cla=CLA,
+                    ins=InsType.SIGN_ARBITRARY_DATA,
+                    p1=p1_add,
+                    p2=p2,
+                    data=chunks[i],
+                )
+
+                if rapdu.status != Errors.SW_SUCCESS:
+                    raise AlgorandSigningError(
+                        f"Error after sending chunk number {i}: {rapdu.status}"
+                    )
+
     @contextmanager
     def sign_data(
         self, auth_request: StdSigData, metadata: StdSignMetadata
@@ -307,89 +449,26 @@ class AlgorandCommandSender:
         if metadata.encoding != "base64":
             raise ValueError("Failed decoding")
 
-        # Handle data - can be base64 string or raw bytes
-        if isinstance(auth_request.data, bytes):
-            # Already bytes, use directly
-            decoded_data = auth_request.data
-        else:
-            # String - decode from base64
-            decoded_data = base64.b64decode(auth_request.data)
-
-        # Prepare all buffers
-        signer_buffer = auth_request.signer
-        scope_buffer = bytes([metadata.scope])
-        encoding_buffer = serialize_encoding(metadata.encoding)
-        data_buffer = decoded_data
-        domain_buffer = auth_request.domain.encode() if auth_request.domain else b""
-
-        # Handle requestId - can be either base64 string or bytes
-        if auth_request.requestId:
-            if isinstance(auth_request.requestId, str):
-                request_id_buffer = base64.b64decode(auth_request.requestId)
-            else:
-                # Already bytes
-                request_id_buffer = auth_request.requestId
-        else:
-            request_id_buffer = b""
-
-        auth_data_buffer = (
-            auth_request.authenticationData if auth_request.authenticationData else b""
-        )
-
         # Prepare HD path buffer
         hd_path = auth_request.hdPath if auth_request.hdPath else "m/44'/283'/0'/0/0"
         path_buffer = serialize_path(hd_path)
 
-        # Calculate message size with variable length fields (2-byte prefixes)
-        message_size = (
-            len(signer_buffer)
-            + len(scope_buffer)
-            + len(encoding_buffer)
-            + 2
-            + len(data_buffer)
-            + 2
-            + len(domain_buffer)
-            + 2
-            + len(request_id_buffer)
-            + 2
-            + len(auth_data_buffer)
-        )
+        # Prepare all data buffers
+        buffers = self._prepare_sign_data_buffers(auth_request, metadata)
 
         # Build the message buffer
-        message_buffer = bytearray(message_size)
-        offset = 0
-
-        def write_field(buffer: bytes, variable_length: bool = False) -> None:
-            nonlocal offset
-            if variable_length:
-                # Write 2-byte big-endian length prefix
-                message_buffer[offset : offset + 2] = len(buffer).to_bytes(
-                    2, byteorder="big"
-                )
-                offset += 2
-            # Copy buffer data
-            message_buffer[offset : offset + len(buffer)] = buffer
-            offset += len(buffer)
-
-        # Write all fields in order
-        write_field(signer_buffer)
-        write_field(scope_buffer)
-        write_field(encoding_buffer)
-        write_field(data_buffer, True)
-        write_field(domain_buffer, True)
-        write_field(request_id_buffer, True)
-        write_field(auth_data_buffer, True)
+        message_buffer = self._build_sign_data_message(*buffers)
 
         # Split message into chunks
-        chunks = split_message(bytes(message_buffer), MAX_APDU_LEN)
-
-        # P2 is always 0 for arbitrary sign
-        p2 = P2.P2_LAST
+        chunks = split_message(message_buffer, MAX_APDU_LEN)
 
         # P1 values for arbitrary sign
         P1_INIT = 0x00
         P1_ADD = 0x01
         P1_LAST = 0x02
+
+        # P2 is always 0 for arbitrary sign
+        p2 = P2.P2_LAST
 
         # Send first chunk with path buffer (P1_INIT)
         rapdu = self.backend.exchange(
@@ -404,20 +483,7 @@ class AlgorandCommandSender:
             raise AlgorandSigningError(f"Error sending path: {rapdu.status}")
 
         # Send all chunks except the last one
-        if len(chunks) > 1:
-            for i in range(0, len(chunks) - 1):
-                rapdu = self.backend.exchange(
-                    cla=CLA,
-                    ins=InsType.SIGN_ARBITRARY_DATA,
-                    p1=P1_ADD,
-                    p2=p2,
-                    data=chunks[i],
-                )
-
-                if rapdu.status != Errors.SW_SUCCESS:
-                    raise AlgorandSigningError(
-                        f"Error after sending chunk number {i}: {rapdu.status}"
-                    )
+        self._send_sign_data_chunks(chunks, P1_ADD, P1_LAST, p2)
 
         # Send the last chunk with exchange_async
         with self.backend.exchange_async(
