@@ -1,10 +1,13 @@
 from enum import IntEnum
 from typing import Generator, Optional, List
 from contextlib import contextmanager
+import base64
+import struct
 
 from ragger.backend.interface import BackendInterface, RAPDU  # type: ignore  # pylint: disable=import-error
 
 from ..utils import pack_account_id
+from .algorand_types import StdSigData, StdSignMetadata
 
 MAX_APDU_LEN: int = 250
 
@@ -66,6 +69,7 @@ class Errors(IntEnum):
     SW_WRONG_AMOUNT = 0xC000
     SW_WRONG_ADDRESS = 0xC000
     # Arbitrary sign error codes
+    SW_DATA_INVALID = 0x6984
     SW_INVALID_SCOPE = 0x6988
     SW_FAILED_DECODING = 0x6989
     SW_INVALID_SIGNER = 0x698A
@@ -85,6 +89,93 @@ def add_account_id_to_message(message: bytes, account_id: int) -> bytes:
         return pack_account_id(account_id) + message
 
     return message
+
+
+def serialize_encoding(encoding: str) -> bytes:
+    """Serialize encoding type to bytes.
+
+    Args:
+        encoding: The encoding type (e.g., 'base64')
+
+    Returns:
+        bytes: Serialized encoding as bytes
+
+    Raises:
+        ValueError: If encoding is not supported
+    """
+    if encoding == "base64":
+        return b"\x01"
+
+    elif encoding == "wrong_encoding":
+        return b"\x99"
+    else:
+        raise ValueError(f"Unsupported encoding: {encoding}")
+
+
+def serialize_path(path: str) -> bytes:
+    """Serialize BIP32 path to bytes.
+
+    Converts a BIP32 path string like "m/44'/283'/0'/0/0" to a 20-byte buffer
+    with 5 uint32 values in little-endian format.
+
+    Args:
+        path: BIP32 path string (e.g., "m/44'/283'/0'/0/0")
+
+    Returns:
+        bytes: 20-byte serialized path
+
+    Raises:
+        ValueError: If path is invalid
+    """
+    HARDENED = 0x80000000
+
+    if not path:
+        raise ValueError("Invalid path.")
+
+    if not path.startswith("m"):
+        raise ValueError('Path should start with "m" (e.g "m/44\'/1\'/5\'/0/3")')
+
+    path_array = path.split("/")
+    if len(path_array) != 6:
+        raise ValueError(
+            "Invalid path. It should be a BIP44 path (e.g \"m/44'/1'/5'/0/3\")"
+        )
+
+    # Allocate 20 bytes for 5 uint32 values
+    buf = bytearray(20)
+
+    # Process each component (skip first 'm')
+    for i in range(1, len(path_array)):
+        value = 0
+        hardening = 0
+
+        component = path_array[i]
+        if component.endswith("'"):
+            hardening = HARDENED
+            try:
+                value = int(component[:-1])
+            except ValueError:
+                raise ValueError(
+                    f"Invalid path: {component} is not a number. (e.g \"m/44'/1'/5'/0/3\")"
+                )
+        else:
+            try:
+                value = int(component)
+            except ValueError:
+                raise ValueError(
+                    f"Invalid path: {component} is not a number. (e.g \"m/44'/1'/5'/0/3\")"
+                )
+
+        if value >= HARDENED:
+            raise ValueError("Incorrect child value (bigger or equal to 0x80000000)")
+
+        value += hardening
+
+        # Write as uint32 little-endian
+        offset = 4 * (i - 1)
+        struct.pack_into("<I", buf, offset, value)
+
+    return bytes(buf)
 
 
 class AlgorandCommandSender:
@@ -112,7 +203,7 @@ class AlgorandCommandSender:
 
     @contextmanager
     def get_address_and_public_key_with_confirmation(
-        self, account_id: int
+        self, account_id: int = 0
     ) -> Generator[None, None, None]:
         with self.backend.exchange_async(
             cla=CLA,
@@ -123,7 +214,7 @@ class AlgorandCommandSender:
         ) as response:
             yield response
 
-    def get_address_and_public_key(self, account_id: int) -> RAPDU:
+    def get_address_and_public_key(self, account_id: int = 0) -> RAPDU:
         return self.backend.exchange(
             cla=CLA,
             ins=InsType.GET_ADDRESS,
@@ -135,7 +226,7 @@ class AlgorandCommandSender:
     # Deprecated use get_address_and_public_key instead
     @contextmanager
     def get_public_key_with_confirmation(
-        self, account_id: int
+        self, account_id: int = 0
     ) -> Generator[None, None, None]:
         with self.backend.exchange_async(
             cla=CLA,
@@ -147,7 +238,7 @@ class AlgorandCommandSender:
             yield response
 
     # Deprecated use get_address_and_public_key instead
-    def get_public_key(self, account_id: int) -> RAPDU:
+    def get_public_key(self, account_id: int = 0) -> RAPDU:
         return self.backend.exchange(
             cla=CLA,
             ins=InsType.GET_PUBLIC_KEY,
@@ -181,7 +272,9 @@ class AlgorandCommandSender:
                 )
 
                 if rapdu.status != Errors.SW_SUCCESS:
-                    raise AlgorandSigningError(f"Error after sending chunk number {i}: {rapdu.status}")
+                    raise AlgorandSigningError(
+                        f"Error after sending chunk number {i}: {rapdu.status}"
+                    )
 
         # Send the last chunk
         with self.backend.exchange_async(
@@ -189,6 +282,149 @@ class AlgorandCommandSender:
             ins=InsType.SIGN_MSGPACK,
             p1=P1.P1_MORE if len(chunks) > 1 else P1.P1_FIRST_ACCOUNT_ID,
             p2=P2.P2_LAST,
+            data=chunks[-1],
+        ) as response:
+            yield response
+
+    @contextmanager
+    def sign_data(
+        self, auth_request: StdSigData, metadata: StdSignMetadata
+    ) -> Generator[None, None, None]:
+        """Sign arbitrary data using the Algorand app.
+
+        Args:
+            auth_request: The signature request data
+            metadata: Metadata including scope and encoding
+
+        Yields:
+            None: Yields control to allow navigation/confirmation
+
+        Raises:
+            ValueError: If encoding is not base64
+            AlgorandSigningError: If signing fails
+        """
+        # Validate encoding
+        if metadata.encoding != "base64":
+            raise ValueError("Failed decoding")
+
+        # Handle data - can be base64 string or raw bytes
+        if isinstance(auth_request.data, bytes):
+            # Already bytes, use directly
+            decoded_data = auth_request.data
+        else:
+            # String - decode from base64
+            decoded_data = base64.b64decode(auth_request.data)
+
+        # Prepare all buffers
+        signer_buffer = auth_request.signer
+        scope_buffer = bytes([metadata.scope])
+        encoding_buffer = serialize_encoding(metadata.encoding)
+        data_buffer = decoded_data
+        domain_buffer = auth_request.domain.encode() if auth_request.domain else b""
+
+        # Handle requestId - can be either base64 string or bytes
+        if auth_request.requestId:
+            if isinstance(auth_request.requestId, str):
+                request_id_buffer = base64.b64decode(auth_request.requestId)
+            else:
+                # Already bytes
+                request_id_buffer = auth_request.requestId
+        else:
+            request_id_buffer = b""
+
+        auth_data_buffer = (
+            auth_request.authenticationData if auth_request.authenticationData else b""
+        )
+
+        # Prepare HD path buffer
+        hd_path = auth_request.hdPath if auth_request.hdPath else "m/44'/283'/0'/0/0"
+        path_buffer = serialize_path(hd_path)
+
+        # Calculate message size with variable length fields (2-byte prefixes)
+        message_size = (
+            len(signer_buffer)
+            + len(scope_buffer)
+            + len(encoding_buffer)
+            + 2
+            + len(data_buffer)
+            + 2
+            + len(domain_buffer)
+            + 2
+            + len(request_id_buffer)
+            + 2
+            + len(auth_data_buffer)
+        )
+
+        # Build the message buffer
+        message_buffer = bytearray(message_size)
+        offset = 0
+
+        def write_field(buffer: bytes, variable_length: bool = False) -> None:
+            nonlocal offset
+            if variable_length:
+                # Write 2-byte big-endian length prefix
+                message_buffer[offset : offset + 2] = len(buffer).to_bytes(
+                    2, byteorder="big"
+                )
+                offset += 2
+            # Copy buffer data
+            message_buffer[offset : offset + len(buffer)] = buffer
+            offset += len(buffer)
+
+        # Write all fields in order
+        write_field(signer_buffer)
+        write_field(scope_buffer)
+        write_field(encoding_buffer)
+        write_field(data_buffer, True)
+        write_field(domain_buffer, True)
+        write_field(request_id_buffer, True)
+        write_field(auth_data_buffer, True)
+
+        # Split message into chunks
+        chunks = split_message(bytes(message_buffer), MAX_APDU_LEN)
+
+        # P2 is always 0 for arbitrary sign
+        p2 = P2.P2_LAST
+
+        # P1 values for arbitrary sign
+        P1_INIT = 0x00
+        P1_ADD = 0x01
+        P1_LAST = 0x02
+
+        # Send first chunk with path buffer (P1_INIT)
+        rapdu = self.backend.exchange(
+            cla=CLA,
+            ins=InsType.SIGN_ARBITRARY_DATA,
+            p1=P1_INIT,
+            p2=p2,
+            data=path_buffer,
+        )
+
+        if rapdu.status != Errors.SW_SUCCESS:
+            raise AlgorandSigningError(f"Error sending path: {rapdu.status}")
+
+        # Send all chunks except the last one
+        if len(chunks) > 1:
+            for i in range(0, len(chunks) - 1):
+                rapdu = self.backend.exchange(
+                    cla=CLA,
+                    ins=InsType.SIGN_ARBITRARY_DATA,
+                    p1=P1_ADD,
+                    p2=p2,
+                    data=chunks[i],
+                )
+
+                if rapdu.status != Errors.SW_SUCCESS:
+                    raise AlgorandSigningError(
+                        f"Error after sending chunk number {i}: {rapdu.status}"
+                    )
+
+        # Send the last chunk with exchange_async
+        with self.backend.exchange_async(
+            cla=CLA,
+            ins=InsType.SIGN_ARBITRARY_DATA,
+            p1=P1_LAST,
+            p2=p2,
             data=chunks[-1],
         ) as response:
             yield response
