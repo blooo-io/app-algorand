@@ -10,7 +10,7 @@ from .application_client.algorand_command_sender import AlgorandCommandSender, E
 from .application_client.algorand_response_unpacker import (
     unpack_get_public_key_response,
 )
-from .utils import check_signature_validity
+from .utils import check_tx_signature_validity
 from .data import (
     txAssetFreeze,
     txAssetXfer,
@@ -104,7 +104,7 @@ def sign_tx_and_verify(
 
     # The device as yielded the result, parse it and ensure that the signature is correct
     signature = client.get_async_response().data
-    assert check_signature_validity(public_key, signature, transaction_blob)
+    assert check_tx_signature_validity(public_key, signature, transaction_blob)
 
 
 # In this test we send to the device a Sign Asset Freeze transaction to sign and validate it on screen
@@ -328,7 +328,7 @@ def test_sign_application_long_shortcut_tx(
 
     # The device as yielded the result, parse it and ensure that the signature is correct
     signature = client.get_async_response().data
-    assert check_signature_validity(public_key, signature, transaction_blob)
+    assert check_tx_signature_validity(public_key, signature, transaction_blob)
 
 
 # Transaction signature refused test

@@ -2,12 +2,18 @@ from pathlib import Path
 
 from typing import List
 import re
+import json
+import hashlib
+import base64
 
 import ed25519  # type: ignore[import-not-found]
+import canonicaljson  # type: ignore[import-not-found]
+
+from .application_client.algorand_types import StdSigData
 
 
 # Check if a signature of a given message is valid
-def check_signature_validity(
+def check_tx_signature_validity(
     public_key: bytes, signature: bytes, message: bytes
 ) -> bool:
     """Verify Ed25519 signature for Algorand transaction.
@@ -23,15 +29,33 @@ def check_signature_validity(
     Returns:
         True if signature is valid, False otherwise
     """
+    # Algorand protocol: prepend "TX" to the transaction bytes before signing
+    prefixed_message = b"TX" + message
+    return check_signature_validity(public_key, signature, prefixed_message)
+
+
+def check_signature_validity(
+    public_key: bytes, signature: bytes, message: bytes
+) -> bool:
+    """Verify Ed25519 signature for any data.
+
+    Any data signatures are verified directly without any prefix.
+    The signature is Ed25519 in raw 64-byte format (not DER encoded).
+
+    Args:
+        public_key: 32-byte Ed25519 public key
+        signature: 64-byte Ed25519 signature
+        message: Message bytes (no prefix added)
+
+    Returns:
+        True if signature is valid, False otherwise
+    """
     try:
         # Create verifying key from public key bytes
         verifying_key = ed25519.VerifyingKey(public_key)
 
-        # Algorand protocol: prepend "TX" to the transaction bytes before signing
-        prefixed_message = b"TX" + message
-
-        # Verify the signature (raises BadSignatureError if invalid)
-        verifying_key.verify(signature, prefixed_message)
+        # Verify the signature directly without any prefix
+        verifying_key.verify(signature, message)
         return True
     except ed25519.BadSignatureError:
         # Signature verification failed
@@ -102,3 +126,48 @@ def pack_account_id(account_id: int) -> bytes:
         bytes: 4-byte big-endian representation of the account ID
     """
     return account_id.to_bytes(4, byteorder="big")
+
+
+def build_to_sign(auth_request: StdSigData) -> bytes:
+    """Build the data to sign for arbitrary data signing.
+
+    This matches the TypeScript buildToSign function. It:
+    1. Decodes the data (if base64) to get JSON
+    2. Parses and canonifies the JSON
+    3. Hashes the canonified JSON with SHA256
+    4. Hashes the authenticationData with SHA256
+    5. Concatenates both hashes
+
+    Args:
+        auth_request: The signature request containing data and authenticationData
+
+    Returns:
+        bytes: The concatenated hash to sign
+    """
+    # Handle data - can be bytes or base64 string
+    if isinstance(auth_request.data, bytes):
+        # Already bytes, use directly
+        decoded_data = auth_request.data
+    else:
+        # String - decode from base64
+        decoded_data = base64.b64decode(auth_request.data)
+
+    # Parse the JSON
+    client_data_json = json.loads(decoded_data.decode("utf-8"))
+
+    # Canonify the JSON
+    canonified_client_data_json = canonicaljson.encode_canonical_json(client_data_json)
+
+    if not canonified_client_data_json:
+        raise ValueError("Wrong JSON")
+
+    # Hash the canonified JSON
+    client_data_json_hash = hashlib.sha256(canonified_client_data_json).digest()
+
+    # Hash the authentication data
+    authenticator_data_hash = hashlib.sha256(auth_request.authenticationData).digest()
+
+    # Concatenate both hashes
+    to_sign = client_data_json_hash + authenticator_data_hash
+
+    return to_sign
