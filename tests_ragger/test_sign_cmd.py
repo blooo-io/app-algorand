@@ -5,12 +5,11 @@ from ragger.error import ExceptionRAPDU
 from ragger.navigator.navigation_scenario import NavigateWithScenario
 from ragger.navigator import NavInsID, Navigator
 
-# from .application_client.algorand_transaction import Transaction
 from .application_client.algorand_command_sender import AlgorandCommandSender, Errors
 from .application_client.algorand_response_unpacker import (
     unpack_get_public_key_response,
 )
-from .utils import check_tx_signature_validity
+from .utils import check_tx_signature_validity, encode_aprv_transaction
 from .data import (
     txAssetFreeze,
     txAssetXfer,
@@ -19,10 +18,11 @@ from .data import (
     txPayment,
     txApplication,
     txApplicationLong,
+    txAprv
 )
 
 
-# In this tests we check the behavior of the device when asked to sign a transaction
+# In these tests we check the behavior of the device when asked to sign a transaction
 
 # Account ID for the test
 ACCOUNT_ID = 123
@@ -329,6 +329,27 @@ def test_sign_application_long_shortcut_tx(
     # The device as yielded the result, parse it and ensure that the signature is correct
     signature = client.get_async_response().data
     assert check_tx_signature_validity(public_key, signature, transaction_blob)
+
+
+# In this test we send to the device a Sign APRV transaction to sign and validate it on screen
+# We will ensure that the displayed information is correct by using screenshots comparison
+def test_sign_aprv_tx(
+    backend: BackendInterface,
+    navigator: Navigator,
+    test_name: str,
+    default_screenshot_path: str,
+) -> None:
+    
+    tx_blob = encode_aprv_transaction(txAprv)
+    
+    sign_tx_and_verify(
+        tx_blob,
+        backend,
+        navigator,
+        test_name,
+        default_screenshot_path,
+    )
+
 
 
 # Transaction signature refused test

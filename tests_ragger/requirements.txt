@@ -4,3 +4,4 @@ ed25519==1.5
 pycryptodome
 canonicaljson>=2.0.0,<3.0.0
 cbor2>=5.7.1,<6.0.0
+msgpack>=1.1.2,<2.0.0

@@ -5,7 +5,7 @@ import re
 import json
 import hashlib
 import base64
-
+import msgpack
 import ed25519  # type: ignore[import-not-found]
 import canonicaljson  # type: ignore[import-not-found]
 
@@ -171,3 +171,48 @@ def build_to_sign(auth_request: StdSigData) -> bytes:
     to_sign = client_data_json_hash + authenticator_data_hash
 
     return to_sign
+
+
+def address_to_public_key(address: str) -> bytes:
+    """Decode Algorand address to 32-byte public key.
+
+    Args:
+        address: Base32-encoded Algorand address
+
+    Returns:
+        bytes: 32-byte public key (address without checksum)
+    """
+    alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
+
+    # Base32 decode
+    bits = 0
+    value = 0
+    output = []
+
+    for char in address:
+        index = alphabet.find(char)
+        if index == -1:
+            continue
+
+        value = (value << 5) | index
+        bits += 5
+
+        if bits >= 8:
+            output.append((value >> (bits - 8)) & 0xFF)
+            bits -= 8
+
+    decoded = bytes(output)
+    # Remove the last 4 bytes (checksum) and return first 32 bytes (public key)
+    return decoded[:32]
+
+
+def encode_aprv_transaction(aprv_transaction: dict) -> bytes:
+    """Encode an APRV transaction as a MessagePack blob.
+
+    Args:
+        aprv_transaction: The APRV transaction to encode
+
+    Returns:
+        bytes: The MessagePack blob
+    """
+    return msgpack.packb(aprv_transaction, use_bin_type=True)

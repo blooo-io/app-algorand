@@ -1,4 +1,6 @@
 import canonicaljson
+from .utils import address_to_public_key
+import base64
 
 txAssetFreeze = [
     136, 164, 102, 97, 100, 100, 196, 32, 75, 42, 74, 217, 212, 217, 0, 234, 22, 249, 220, 238, 83, 75, 156, 1, 137, 218, 161, 172, 188, 202,
@@ -99,4 +101,13 @@ ARBITRARY_SIGN_TEST_CASES = [
     },
 ]
 
-
+txAprv = {
+    "apid": 1005,
+    "aprv": 3,
+    "fee": 1000,
+    "fv": 931,
+    "gh": base64.b64decode("t9fO3Zr2fsmd8Dg+0HkTKwX9dkf73CViBarLDH2hLtw="),
+    "lv": 1931,
+    "snd": address_to_public_key("ALICE7Y2JOFGG2VGUC64VINB75PI56O6M2XW233KG2I3AIYJFUD4QMYTJM"),
+    "type": "appl",
+}
