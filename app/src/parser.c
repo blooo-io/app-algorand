@@ -589,44 +589,43 @@ static parser_error_t parser_printTxApplication(parser_context_t *ctx, uint8_t d
         }
         return parser_ok;
 
-        case IDX_REJECT_VERSION:
-            snprintf(outKey, outKeyLen, "Reject version");
-            if (application->reject_version > 0) {
-                if (uint64_to_str(outVal, outValLen, application->reject_version) != NULL) {
-                    return parser_unexpected_error;
-                }
-            } else {
-                snprintf(outVal, outValLen, "Not set");
+    case IDX_REJECT_VERSION:
+        snprintf(outKey, outKeyLen, "Reject version");
+        if (application->reject_version > 0) {
+            if (uint64_to_str(outVal, outValLen, application->reject_version) != NULL) {
+                return parser_unexpected_error;
             }
-            return parser_ok;
+        } else {
+            snprintf(outVal, outValLen, "Not set");
+        }
+        return parser_ok;
 
-        case IDX_ON_COMPLETION:
-            snprintf(outKey, outKeyLen, "On completion");
-            switch (application->oncompletion)
-            {
-            case NOOPOC:
-                snprintf(outVal, outValLen, "NoOp");
-                break;
-            case OPTINOC:
-                snprintf(outVal, outValLen, "OptIn");
-                break;
-            case CLOSEOUTOC:
-                snprintf(outVal, outValLen, "CloseOut");
-                break;
-            case CLEARSTATEOC:
-                snprintf(outVal, outValLen, "ClearState");
-                break;
-            case UPDATEAPPOC:
-                snprintf(outVal, outValLen, "UpdateApp");
-                break;
-            case DELETEAPPOC:
-                snprintf(outVal, outValLen, "DeleteApp");
-                break;
-            default:
-                snprintf(outVal, outValLen, "Unknown");
-                break;
-            }
-            return parser_ok;
+    case IDX_ON_COMPLETION:
+        snprintf(outKey, outKeyLen, "On completion");
+        switch (application->oncompletion) {
+        case NOOPOC:
+            snprintf(outVal, outValLen, "NoOp");
+            break;
+        case OPTINOC:
+            snprintf(outVal, outValLen, "OptIn");
+            break;
+        case CLOSEOUTOC:
+            snprintf(outVal, outValLen, "CloseOut");
+            break;
+        case CLEARSTATEOC:
+            snprintf(outVal, outValLen, "ClearState");
+            break;
+        case UPDATEAPPOC:
+            snprintf(outVal, outValLen, "UpdateApp");
+            break;
+        case DELETEAPPOC:
+            snprintf(outVal, outValLen, "DeleteApp");
+            break;
+        default:
+            snprintf(outVal, outValLen, "Unknown");
+            break;
+        }
+        return parser_ok;
 
     case IDX_BOXES: {
         return parser_printBoxes(outKey, outKeyLen, outVal, outValLen, displayIdx, pageIdx, pageCount, application);
