@@ -5,7 +5,7 @@ import re
 import json
 import hashlib
 import base64
-import msgpack
+import msgpack # type: ignore[import-not-found]
 import ed25519  # type: ignore[import-not-found]
 import canonicaljson  # type: ignore[import-not-found]
 
