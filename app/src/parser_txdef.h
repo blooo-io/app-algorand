@@ -305,7 +305,6 @@ typedef enum {
 
 typedef enum {
     IDX_APP_ID = 0,
-    IDX_REJECT_VERSION,
     IDX_ON_COMPLETION,
     IDX_BOXES,
     IDX_FOREIGN_APP,
@@ -317,6 +316,7 @@ typedef enum {
     IDX_EXTRA_PAGES,
     IDX_APPROVE,
     IDX_CLEAR,
+    IDX_REJECT_VERSION,
 } txn_application_index_e;
 
 typedef enum {
