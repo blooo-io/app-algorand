@@ -18,7 +18,7 @@ from .data import (
     txPayment,
     txApplication,
     txApplicationLong,
-    txAprv
+    txAprv,
 )
 
 
@@ -339,9 +339,9 @@ def test_sign_aprv_tx(
     test_name: str,
     default_screenshot_path: str,
 ) -> None:
-    
+
     tx_blob = encode_aprv_transaction(txAprv)
-    
+
     sign_tx_and_verify(
         tx_blob,
         backend,
@@ -349,7 +349,6 @@ def test_sign_aprv_tx(
         test_name,
         default_screenshot_path,
     )
-
 
 
 # Transaction signature refused test
