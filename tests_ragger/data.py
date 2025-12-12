@@ -89,15 +89,46 @@ txApplicationLong = "de0011a46170616198c4fa9fdd8fe9420e5d401d02050d78f5d13ea9f20
 ARBITRARY_SIGN_TEST_CASES = [
     {
         "idx": 0,
-        "data": canonicaljson.encode_canonical_json({"type": "arc60.create", "challenge": "eSZVsYmvNCjJGH5a9WWIjKp5jm5DFxlwBBAw9zc8FZM=", "origin": "https://arc60.io"}) or '',
+        "data": canonicaljson.encode_canonical_json(
+            {
+                "type": "arc60.create",
+                "challenge": "eSZVsYmvNCjJGH5a9WWIjKp5jm5DFxlwBBAw9zc8FZM=",
+                "origin": "https://arc60.io",
+            }
+        )
+        or "",
     },
     {
         "idx": 1,
-        "data": canonicaljson.encode_canonical_json({"account_address": "BYVBFXCGJLDU5Q7POFA2G4CLAGUBWRU3TOKDPNQG57D44KW6CVY3FPIXRM", "chain_id": "283", "domain": "arc60.io", "expiration_time": "2022-12-31T23:59:59Z", "issued_at": "2021-12-31T23:59:59Z", "nonce": "A4nEQYY3Ss9sCkTMwIIZui5VeUS5Y1HAQDK2+ivNtX8=", "not_before": "2021-12-31T23:59:59Z", "resources": ["auth", "sign"], "statement": "We are requesting you to sign this message to authenticate to arc60.io", "type": "ed25519", "uri": "https://arc60.io", "version": "1"}) or '',
+        "data": canonicaljson.encode_canonical_json(
+            {
+                "account_address": "BYVBFXCGJLDU5Q7POFA2G4CLAGUBWRU3TOKDPNQG57D44KW6CVY3FPIXRM",
+                "chain_id": "283",
+                "domain": "arc60.io",
+                "expiration_time": "2022-12-31T23:59:59Z",
+                "issued_at": "2021-12-31T23:59:59Z",
+                "nonce": "A4nEQYY3Ss9sCkTMwIIZui5VeUS5Y1HAQDK2+ivNtX8=",
+                "not_before": "2021-12-31T23:59:59Z",
+                "resources": ["auth", "sign"],
+                "statement": "We are requesting you to sign this message to authenticate to arc60.io",
+                "type": "ed25519",
+                "uri": "https://arc60.io",
+                "version": "1",
+            }
+        )
+        or "",
     },
     {
         "idx": 2,
-        "data": canonicaljson.encode_canonical_json({"origin": "https://webauthn.io", "resources": ["auth", "sign"], "rpId": "webauthn.io", "challenge": "g8OebU4sWOCGljYnKXw4WUFNDszbeWfBJJKwmrTHuvc"}) or '',
+        "data": canonicaljson.encode_canonical_json(
+            {
+                "origin": "https://webauthn.io",
+                "resources": ["auth", "sign"],
+                "rpId": "webauthn.io",
+                "challenge": "g8OebU4sWOCGljYnKXw4WUFNDszbeWfBJJKwmrTHuvc",
+            }
+        )
+        or "",
     },
 ]
 
@@ -108,6 +139,734 @@ txAprv = {
     "fv": 931,
     "gh": base64.b64decode("t9fO3Zr2fsmd8Dg+0HkTKwX9dkf73CViBarLDH2hLtw="),
     "lv": 1931,
-    "snd": address_to_public_key("ALICE7Y2JOFGG2VGUC64VINB75PI56O6M2XW233KG2I3AIYJFUD4QMYTJM"),
+    "snd": address_to_public_key(
+        "ALICE7Y2JOFGG2VGUC64VINB75PI56O6M2XW233KG2I3AIYJFUD4QMYTJM"
+    ),
+    "type": "appl",
+}
+
+txAlAddress = {
+    "al": [
+        {
+            # Address
+            "d": address_to_public_key(
+                "BOBBYB3QD5QGQ27EBYHHUT7J76EWXKFOSF2NNYYYI6EOAQ5D3M2YW2UGEA"
+            )
+        }
+    ],
+    "apid": 1005,
+    "fee": 1000,
+    "fv": 931,  # THIS is not shown
+    "gh": base64.b64decode("t9fO3Zr2fsmd8Dg+0HkTKwX9dkf73CViBarLDH2hLtw="),
+    "lv": 1931,  # THIS is not shown
+    "snd": address_to_public_key(
+        "ALICE7Y2JOFGG2VGUC64VINB75PI56O6M2XW233KG2I3AIYJFUD4QMYTJM"
+    ),
+    "type": "appl",
+}
+
+txAlMultipleAddresses = {
+    "al": [
+        {
+            # Address
+            "d": address_to_public_key(
+                "BOBBYB3QD5QGQ27EBYHHUT7J76EWXKFOSF2NNYYYI6EOAQ5D3M2YW2UGEA"
+            )
+        },
+        {
+            # Address
+            "d": address_to_public_key(
+                "BOBBYB3QD5QGQ27EBYHHUT7J76EWXKFOSF2NNYYYI6EOAQ5D3M2YW2UGEA"
+            )
+        },
+        {
+            # Address
+            "d": address_to_public_key(
+                "BOBBYB3QD5QGQ27EBYHHUT7J76EWXKFOSF2NNYYYI6EOAQ5D3M2YW2UGEA"
+            )
+        },
+        {
+            # Address
+            "d": address_to_public_key(
+                "BOBBYB3QD5QGQ27EBYHHUT7J76EWXKFOSF2NNYYYI6EOAQ5D3M2YW2UGEA"
+            )
+        },
+        {
+            # Address
+            "d": address_to_public_key(
+                "BOBBYB3QD5QGQ27EBYHHUT7J76EWXKFOSF2NNYYYI6EOAQ5D3M2YW2UGEA"
+            )
+        },
+        {
+            # Address
+            "d": address_to_public_key(
+                "BOBBYB3QD5QGQ27EBYHHUT7J76EWXKFOSF2NNYYYI6EOAQ5D3M2YW2UGEA"
+            )
+        },
+    ],
+    "apid": 1005,
+    "fee": 1000,
+    "fv": 931,  # THIS is not shown
+    "gh": base64.b64decode("t9fO3Zr2fsmd8Dg+0HkTKwX9dkf73CViBarLDH2hLtw="),
+    "lv": 1931,  # THIS is not shown
+    "snd": address_to_public_key(
+        "ALICE7Y2JOFGG2VGUC64VINB75PI56O6M2XW233KG2I3AIYJFUD4QMYTJM"
+    ),
+    "type": "appl",
+}
+
+txAlAsset = {
+    "al": [
+        {
+            # Asset ID
+            "s": 1010
+        }
+    ],
+    "apid": 1005,
+    "fee": 1000,
+    "fv": 931,
+    "gh": base64.b64decode("t9fO3Zr2fsmd8Dg+0HkTKwX9dkf73CViBarLDH2hLtw="),
+    "lv": 1931,
+    "snd": address_to_public_key(
+        "ALICE7Y2JOFGG2VGUC64VINB75PI56O6M2XW233KG2I3AIYJFUD4QMYTJM"
+    ),
+    "type": "appl",
+}
+
+txAlApplication = {
+    "al": [
+        {
+            # Application ID
+            "p": 1042
+        }
+    ],
+    "apid": 1005,
+    "fee": 1000,
+    "fv": 931,
+    "gh": base64.b64decode("t9fO3Zr2fsmd8Dg+0HkTKwX9dkf73CViBarLDH2hLtw="),
+    "lv": 1931,
+    "snd": address_to_public_key(
+        "ALICE7Y2JOFGG2VGUC64VINB75PI56O6M2XW233KG2I3AIYJFUD4QMYTJM"
+    ),
+    "type": "appl",
+}
+
+txAlHolding = {
+    "al": [
+        # Asset ID
+        {
+            "s": 1010,  # 0x3f2
+        },
+        # Address
+        {
+            "d": address_to_public_key(
+                "BOBBYB3QD5QGQ27EBYHHUT7J76EWXKFOSF2NNYYYI6EOAQ5D3M2YW2UGEA"
+            )
+        },
+        # Holding resource
+        {
+            "h": {
+                "d": 2,  # 1-base Index to Address resource
+                "s": 1,  # 1-base Index to Application resource
+            }
+        },
+    ],
+    "apid": 1005,
+    "fee": 1000,
+    "fv": 931,
+    "gh": base64.b64decode("t9fO3Zr2fsmd8Dg+0HkTKwX9dkf73CViBarLDH2hLtw="),
+    "lv": 1931,
+    "snd": address_to_public_key(
+        "ALICE7Y2JOFGG2VGUC64VINB75PI56O6M2XW233KG2I3AIYJFUD4QMYTJM"
+    ),
+    "type": "appl",
+}
+
+txMultipleHoldings = {
+    "al": [
+        # Asset ID
+        {
+            "s": 1010,  # 0x3f2
+        },
+        # Address
+        {
+            "d": address_to_public_key(
+                "BOBBYB3QD5QGQ27EBYHHUT7J76EWXKFOSF2NNYYYI6EOAQ5D3M2YW2UGEA"
+            )
+        },
+        # Holding resource
+        {
+            "h": {
+                "d": 2,  # 1-base Index to Address resource
+                "s": 1,  # 1-base Index to Asset resource
+            }
+        },
+        # Asset ID
+        {
+            "s": 2020,
+        },
+        # Address
+        {
+            "d": address_to_public_key(
+                "BOBBYB3QD5QGQ27EBYHHUT7J76EWXKFOSF2NNYYYI6EOAQ5D3M2YW2UGEA"
+            )
+        },
+        # Holding resource
+        {
+            "h": {
+                "d": 5,  # 1-base Index to Address resource
+                "s": 4,  # 1-base Index to Asset resource
+            }
+        },
+    ],
+    "apid": 1005,
+    "fee": 1000,
+    "fv": 931,
+    "gh": base64.b64decode("t9fO3Zr2fsmd8Dg+0HkTKwX9dkf73CViBarLDH2hLtw="),
+    "lv": 1931,
+    "snd": address_to_public_key(
+        "ALICE7Y2JOFGG2VGUC64VINB75PI56O6M2XW233KG2I3AIYJFUD4QMYTJM"
+    ),
+    "type": "appl",
+}
+
+
+txAlLocals = {
+    "al": [
+        # Application ID
+        {
+            "p": 1042,
+        },
+        # Address
+        {
+            "d": address_to_public_key(
+                "BOBBYB3QD5QGQ27EBYHHUT7J76EWXKFOSF2NNYYYI6EOAQ5D3M2YW2UGEA"
+            )
+        },
+        # Locals resource
+        {
+            "l": {
+                "d": 2,  # 1-base Index to Address resource
+                "p": 1,  # 1-base Index to Application resource
+            }
+        },
+    ],
+    "apid": 1005,
+    "fee": 1000,
+    "fv": 931,
+    "gh": base64.b64decode("t9fO3Zr2fsmd8Dg+0HkTKwX9dkf73CViBarLDH2hLtw="),
+    "lv": 1931,
+    "snd": address_to_public_key(
+        "ALICE7Y2JOFGG2VGUC64VINB75PI56O6M2XW233KG2I3AIYJFUD4QMYTJM"
+    ),
+    "type": "appl",
+}
+
+
+txAlBox = {
+    "al": [
+        # Application ID
+        {
+            "p": 1042,
+        },
+        # Box resource
+        {
+            "b": {
+                "i": 1,  # 1-based Index to Application resource
+                "n": base64.b64decode("Ym94TmFtZQ=="),  # Decoded Box name (boxName)
+            }
+        },
+    ],
+    "apid": 1005,
+    "fee": 1000,
+    "fv": 931,
+    "gh": base64.b64decode("t9fO3Zr2fsmd8Dg+0HkTKwX9dkf73CViBarLDH2hLtw="),
+    "lv": 1931,
+    "snd": address_to_public_key(
+        "ALICE7Y2JOFGG2VGUC64VINB75PI56O6M2XW233KG2I3AIYJFUD4QMYTJM"
+    ),
+    "type": "appl",
+}
+
+txAlEmptyBoxRef = {
+    "al": [{}],
+    "apid": 1005,
+    "fee": 1000,
+    "fv": 931,
+    "gh": base64.b64decode("t9fO3Zr2fsmd8Dg+0HkTKwX9dkf73CViBarLDH2hLtw="),
+    "lv": 1931,
+    "snd": address_to_public_key(
+        "ALICE7Y2JOFGG2VGUC64VINB75PI56O6M2XW233KG2I3AIYJFUD4QMYTJM"
+    ),
+    "type": "appl",
+}
+
+# Mixed resources: address, asset, application, and empty element (4 elements)
+txAlMixedResources = {
+    "al": [
+        # Address
+        {
+            "d": address_to_public_key(
+                "BOBBYB3QD5QGQ27EBYHHUT7J76EWXKFOSF2NNYYYI6EOAQ5D3M2YW2UGEA"
+            )
+        },
+        # Asset ID
+        {"s": 1010},
+        # Application ID
+        {"p": 1042},
+        # Empty element
+        {},
+    ],
+    "apid": 1005,
+    "fee": 1000,
+    "fv": 931,
+    "gh": base64.b64decode("t9fO3Zr2fsmd8Dg+0HkTKwX9dkf73CViBarLDH2hLtw="),
+    "lv": 1931,
+    "snd": address_to_public_key(
+        "ALICE7Y2JOFGG2VGUC64VINB75PI56O6M2XW233KG2I3AIYJFUD4QMYTJM"
+    ),
+    "type": "appl",
+}
+
+# Mixed resources with box and locals (6 elements)
+txAlMixedWithBoxAndLocals = {
+    "al": [
+        # Application ID  (needed for box and locals)
+        {"p": 1042},
+        # Address  (needed for locals)
+        {
+            "d": address_to_public_key(
+                "BOBBYB3QD5QGQ27EBYHHUT7J76EWXKFOSF2NNYYYI6EOAQ5D3M2YW2UGEA"
+            )
+        },
+        # Box resource
+        {
+            "b": {
+                "i": 1,  # 1-based Index to Application resource
+                "n": base64.b64decode("Ym94TmFtZQ=="),  # boxName
+            }
+        },
+        # Locals resource
+        {
+            "l": {
+                "d": 2,  # 1-based Index to Address resource
+                "p": 1,  # 1-based Index to Application resource
+            }
+        },
+        # Asset ID
+        {"s": 2020},
+        # Empty element
+        {},
+    ],
+    "apid": 1005,
+    "fee": 1000,
+    "fv": 931,
+    "gh": base64.b64decode("t9fO3Zr2fsmd8Dg+0HkTKwX9dkf73CViBarLDH2hLtw="),
+    "lv": 1931,
+    "snd": address_to_public_key(
+        "ALICE7Y2JOFGG2VGUC64VINB75PI56O6M2XW233KG2I3AIYJFUD4QMYTJM"
+    ),
+    "type": "appl",
+}
+
+# Maximum valid: exactly 7 elements (mix of all types including empty) for Nano X
+txAlMaxElementsNanoX = {
+    "al": [
+        # 1. Application ID
+        {"p": 1042},
+        # 2. Address
+        {
+            "d": address_to_public_key(
+                "BOBBYB3QD5QGQ27EBYHHUT7J76EWXKFOSF2NNYYYI6EOAQ5D3M2YW2UGEA"
+            )
+        },
+        # 3. Asset ID
+        {"s": 1010},
+        # 4. Holding resource
+        {
+            "h": {
+                "d": 2,  # 1-based Index to Address resource
+                "s": 3,  # 1-based Index to Asset resource
+            }
+        },
+        # 5. Locals resource
+        {
+            "l": {
+                "d": 2,  # 1-based Index to Address resource
+                "p": 1,  # 1-based Index to Application resource
+            }
+        },
+        # 6. Box resource
+        {
+            "b": {
+                "i": 1,  # 1-based Index to Application resource
+                "n": base64.b64decode("Ym94TmFtZQ=="),  # boxName
+            }
+        },
+        # 7. Another asset
+        {"s": 2020},
+    ],
+    "apid": 1005,
+    "fee": 1000,
+    "fv": 931,
+    "gh": base64.b64decode("t9fO3Zr2fsmd8Dg+0HkTKwX9dkf73CViBarLDH2hLtw="),
+    "lv": 1931,
+    "snd": address_to_public_key(
+        "ALICE7Y2JOFGG2VGUC64VINB75PI56O6M2XW233KG2I3AIYJFUD4QMYTJM"
+    ),
+    "type": "appl",
+}
+
+# Maximum valid: exactly 16 elements (mix of all types including empty) for other devices
+txAlMaxElementsOtherDevices = {
+    "al": [
+        # 1. Application ID
+        {"p": 1042},
+        # 2. Address
+        {
+            "d": address_to_public_key(
+                "BOBBYB3QD5QGQ27EBYHHUT7J76EWXKFOSF2NNYYYI6EOAQ5D3M2YW2UGEA"
+            )
+        },
+        # 3. Asset ID
+        {"s": 1010},
+        # 4. Holding resource
+        {
+            "h": {
+                "d": 2,  # 1-based Index to Address resource
+                "s": 3,  # 1-based Index to Asset resource
+            }
+        },
+        # 5. Locals resource
+        {
+            "l": {
+                "d": 2,  # 1-based Index to Address resource
+                "p": 1,  # 1-based Index to Application resource
+            }
+        },
+        # 6. Box resource
+        {
+            "b": {
+                "i": 1,  # 1-based Index to Application resource
+                "n": base64.b64decode("Ym94TmFtZQ=="),  # boxName
+            }
+        },
+        # 7. Another asset
+        {"s": 2020},
+        # 8. Another application
+        {"p": 2042},
+        # 9. Another address
+        {
+            "d": address_to_public_key(
+                "ALICE7Y2JOFGG2VGUC64VINB75PI56O6M2XW233KG2I3AIYJFUD4QMYTJM"
+            )
+        },
+        # 10. Empty element
+        {},
+        # 11. Another asset
+        {"s": 3030},
+        # 12. Another application
+        {"p": 3042},
+        # 13. Another address
+        {
+            "d": address_to_public_key(
+                "BOBBYB3QD5QGQ27EBYHHUT7J76EWXKFOSF2NNYYYI6EOAQ5D3M2YW2UGEA"
+            )
+        },
+        # 14. Another asset
+        {"s": 4040},
+        # 15. Empty element
+        {},
+        # 16. Another asset
+        {"s": 5050},
+    ],
+    "apid": 1005,
+    "fee": 1000,
+    "fv": 931,
+    "gh": base64.b64decode("t9fO3Zr2fsmd8Dg+0HkTKwX9dkf73CViBarLDH2hLtw="),
+    "lv": 1931,
+    "snd": address_to_public_key(
+        "ALICE7Y2JOFGG2VGUC64VINB75PI56O6M2XW233KG2I3AIYJFUD4QMYTJM"
+    ),
+    "type": "appl",
+}
+
+# Over maximum: 17 elements - should be rejected by the app on all devices
+txAlOverMaxElements = {
+    "al": [
+        # 1. Application ID
+        {"p": 1042},
+        # 2. Address
+        {
+            "d": address_to_public_key(
+                "BOBBYB3QD5QGQ27EBYHHUT7J76EWXKFOSF2NNYYYI6EOAQ5D3M2YW2UGEA"
+            )
+        },
+        # 3. Asset ID
+        {"s": 1010},
+        # 4. Holding resource
+        {
+            "h": {
+                "d": 2,
+                "s": 3,
+            }
+        },
+        # 5. Locals resource
+        {
+            "l": {
+                "d": 2,
+                "p": 1,
+            }
+        },
+        # 6. Box resource
+        {
+            "b": {
+                "i": 1,
+                "n": base64.b64decode("Ym94TmFtZQ=="),
+            }
+        },
+        # 7. Another asset
+        {"s": 2020},
+        # 8. Another application
+        {"p": 2042},
+        # 9. Another address
+        {
+            "d": address_to_public_key(
+                "ALICE7Y2JOFGG2VGUC64VINB75PI56O6M2XW233KG2I3AIYJFUD4QMYTJM"
+            )
+        },
+        # 10. Empty element
+        {},
+        # 11. Another asset
+        {"s": 3030},
+        # 12. Another application
+        {"p": 3042},
+        # 13. Another asset
+        {"s": 4040},
+        # 14. Another address
+        {
+            "d": address_to_public_key(
+                "BOBBYB3QD5QGQ27EBYHHUT7J76EWXKFOSF2NNYYYI6EOAQ5D3M2YW2UGEA"
+            )
+        },
+        # 15. Another asset
+        {"s": 5050},
+        # 16. Another application
+        {"p": 4042},
+        # 17. Another asset - exceeds limit on all devices
+        {"s": 6060},
+    ],
+    "apid": 1005,
+    "fee": 1000,
+    "fv": 931,
+    "gh": base64.b64decode("t9fO3Zr2fsmd8Dg+0HkTKwX9dkf73CViBarLDH2hLtw="),
+    "lv": 1931,
+    "snd": address_to_public_key(
+        "ALICE7Y2JOFGG2VGUC64VINB75PI56O6M2XW233KG2I3AIYJFUD4QMYTJM"
+    ),
+    "type": "appl",
+}
+
+# Multiple asset with empty element (5 elements)
+txAlMultipleAssets = {
+    "al": [
+        {"s": 1010},
+        {"s": 2020},
+        {"s": 3030},
+        {"s": 4040},
+        {},  # Empty element
+    ],
+    "apid": 1005,
+    "fee": 1000,
+    "fv": 931,
+    "gh": base64.b64decode("t9fO3Zr2fsmd8Dg+0HkTKwX9dkf73CViBarLDH2hLtw="),
+    "lv": 1931,
+    "snd": address_to_public_key(
+        "ALICE7Y2JOFGG2VGUC64VINB75PI56O6M2XW233KG2I3AIYJFUD4QMYTJM"
+    ),
+    "type": "appl",
+}
+
+# Multiple application with empty element (5 elements)
+txAlMultipleApplications = {
+    "al": [
+        {"p": 1042},
+        {"p": 2042},
+        {"p": 3042},
+        {"p": 4042},
+        {},  # Empty element
+    ],
+    "apid": 1005,
+    "fee": 1000,
+    "fv": 931,
+    "gh": base64.b64decode("t9fO3Zr2fsmd8Dg+0HkTKwX9dkf73CViBarLDH2hLtw="),
+    "lv": 1931,
+    "snd": address_to_public_key(
+        "ALICE7Y2JOFGG2VGUC64VINB75PI56O6M2XW233KG2I3AIYJFUD4QMYTJM"
+    ),
+    "type": "appl",
+}
+
+# Holding resource missing address index (d)
+txAlHoldingMissingAddressIndex = {
+    "al": [
+        # Asset ID
+        {"s": 1010},
+        # Address
+        {
+            "d": address_to_public_key(
+                "BOBBYB3QD5QGQ27EBYHHUT7J76EWXKFOSF2NNYYYI6EOAQ5D3M2YW2UGEA"
+            )
+        },
+        # Holding resource missing 'd' (address index)
+        {
+            "h": {
+                "s": 1,  # 1-based Index to Asset resource (d is missing)
+            }
+        },
+    ],
+    "apid": 1005,
+    "fee": 1000,
+    "fv": 931,
+    "gh": base64.b64decode("t9fO3Zr2fsmd8Dg+0HkTKwX9dkf73CViBarLDH2hLtw="),
+    "lv": 1931,
+    "snd": address_to_public_key(
+        "ALICE7Y2JOFGG2VGUC64VINB75PI56O6M2XW233KG2I3AIYJFUD4QMYTJM"
+    ),
+    "type": "appl",
+}
+
+# Holding resource missing asset index (s)
+txAlHoldingMissingAssetIndex = {
+    "al": [
+        # Asset ID
+        {"s": 1010},
+        # Address
+        {
+            "d": address_to_public_key(
+                "BOBBYB3QD5QGQ27EBYHHUT7J76EWXKFOSF2NNYYYI6EOAQ5D3M2YW2UGEA"
+            )
+        },
+        # Holding resource missing 's' (asset index)
+        {
+            "h": {
+                "d": 2,  # 1-based Index to Address resource (s is missing)
+            }
+        },
+    ],
+    "apid": 1005,
+    "fee": 1000,
+    "fv": 931,
+    "gh": base64.b64decode("t9fO3Zr2fsmd8Dg+0HkTKwX9dkf73CViBarLDH2hLtw="),
+    "lv": 1931,
+    "snd": address_to_public_key(
+        "ALICE7Y2JOFGG2VGUC64VINB75PI56O6M2XW233KG2I3AIYJFUD4QMYTJM"
+    ),
+    "type": "appl",
+}
+
+# Locals resource missing address index (d)
+txAlLocalsMissingAddressIndex = {
+    "al": [
+        # Application ID
+        {"p": 1042},
+        # Address
+        {
+            "d": address_to_public_key(
+                "BOBBYB3QD5QGQ27EBYHHUT7J76EWXKFOSF2NNYYYI6EOAQ5D3M2YW2UGEA"
+            )
+        },
+        # Locals resource missing 'd' (address index)
+        {
+            "l": {
+                "p": 1,  # 1-based Index to Application resource (d is missing)
+            }
+        },
+    ],
+    "apid": 1005,
+    "fee": 1000,
+    "fv": 931,
+    "gh": base64.b64decode("t9fO3Zr2fsmd8Dg+0HkTKwX9dkf73CViBarLDH2hLtw="),
+    "lv": 1931,
+    "snd": address_to_public_key(
+        "ALICE7Y2JOFGG2VGUC64VINB75PI56O6M2XW233KG2I3AIYJFUD4QMYTJM"
+    ),
+    "type": "appl",
+}
+
+# Locals resource missing application index (p)
+txAlLocalsMissingApplicationIndex = {
+    "al": [
+        # Application ID
+        {"p": 1042},
+        # Address
+        {
+            "d": address_to_public_key(
+                "BOBBYB3QD5QGQ27EBYHHUT7J76EWXKFOSF2NNYYYI6EOAQ5D3M2YW2UGEA"
+            )
+        },
+        # Locals resource missing 'p' (application index)
+        {
+            "l": {
+                "d": 2,  # 1-based Index to Address resource (p is missing)
+            }
+        },
+    ],
+    "apid": 1005,
+    "fee": 1000,
+    "fv": 931,
+    "gh": base64.b64decode("t9fO3Zr2fsmd8Dg+0HkTKwX9dkf73CViBarLDH2hLtw="),
+    "lv": 1931,
+    "snd": address_to_public_key(
+        "ALICE7Y2JOFGG2VGUC64VINB75PI56O6M2XW233KG2I3AIYJFUD4QMYTJM"
+    ),
+    "type": "appl",
+}
+
+# Holding, locals, and empty resources together (7 elements)
+txAlComplexMixHoldingAndLocals = {
+    "al": [
+        # 1. Application ID (needed for locals)
+        {"p": 1042},
+        # 2. Asset ID (needed for holding)
+        {"s": 1010},
+        # 3. Address (needed for holding and locals)
+        {
+            "d": address_to_public_key(
+                "BOBBYB3QD5QGQ27EBYHHUT7J76EWXKFOSF2NNYYYI6EOAQ5D3M2YW2UGEA"
+            )
+        },
+        # 4. Holding resource
+        {
+            "h": {
+                "d": 3,  # 1-based Index to Address resource
+                "s": 2,  # 1-based Index to Asset resource
+            }
+        },
+        # 5. Locals resource
+        {
+            "l": {
+                "d": 3,  # 1-based Index to Address resource
+                "p": 1,  # 1-based Index to Application resource
+            }
+        },
+        # 6. Empty element
+        {},
+        # 7. Another holding
+        {
+            "h": {
+                "d": 3,
+                "s": 2,
+            }
+        },
+    ],
+    "apid": 1005,
+    "fee": 1000,
+    "fv": 931,
+    "gh": base64.b64decode("t9fO3Zr2fsmd8Dg+0HkTKwX9dkf73CViBarLDH2hLtw="),
+    "lv": 1931,
+    "snd": address_to_public_key(
+        "ALICE7Y2JOFGG2VGUC64VINB75PI56O6M2XW233KG2I3AIYJFUD4QMYTJM"
+    ),
     "type": "appl",
 }
