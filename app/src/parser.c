@@ -256,7 +256,8 @@ static parser_error_t parser_printAccessListElements(char *outKey, uint16_t outK
         temp_offset = 0;
         snprintf(outKey, outKeyLen, "al[%d] - Holding", tmpIdx + 1);
         if (element->holding.d > 0) {
-            temp_offset += snprintf(outVal + temp_offset, outValLen - temp_offset, "Address: al[%d]\n", element->holding.d);
+            temp_offset +=
+                snprintf(outVal + temp_offset, outValLen - temp_offset, "Address: al[%d]\n", element->holding.d);
         }
         if (element->holding.s > 0) {
             snprintf(outVal + temp_offset, outValLen - temp_offset, "Asset ID: al[%d]", element->holding.s);
@@ -267,7 +268,8 @@ static parser_error_t parser_printAccessListElements(char *outKey, uint16_t outK
         temp_offset = 0;
         snprintf(outKey, outKeyLen, "al[%d] - Local", tmpIdx + 1);
         if (element->local.d > 0) {
-            temp_offset += snprintf(outVal + temp_offset, outValLen - temp_offset, "Address: al[%d]\n", element->local.d);
+            temp_offset +=
+                snprintf(outVal + temp_offset, outValLen - temp_offset, "Address: al[%d]\n", element->local.d);
         }
         if (element->local.p > 0) {
             snprintf(outVal + temp_offset, outValLen - temp_offset, "App ID: al[%d]", element->local.p);
