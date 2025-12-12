@@ -21,6 +21,7 @@ extern "C" {
 
 #include <stdint.h>
 #include <stddef.h>
+#include "bolos_target.h"
 
 typedef enum tx_type_e {
     TX_UNKNOWN,
@@ -90,8 +91,15 @@ typedef enum tx_type_e {
 #define KEY_APP_FOREIGN_ASSETS "apas"
 #define KEY_APP_BOXES          "apbx"
 #define KEY_APP_REJECT_VERSION "aprv"
+#define KEY_APP_ACCESS_LIST    "al"
 #define KEY_APP_BOX_INDEX      "i"
 #define KEY_APP_BOX_NAME       "n"
+#define KEY_APP_APP            "p"
+#define KEY_APP_ASSET          "s"
+#define KEY_APP_ADDRESS        "d"
+#define KEY_APP_HOLDING        "h"
+#define KEY_APP_LOCAL          "l"
+#define KEY_APP_BOX            "b"
 
 #define KEY_APARAMS_TOTAL         "t"
 #define KEY_APARAMS_DECIMALS      "dc"
@@ -119,6 +127,16 @@ typedef enum oncompletion {
     DELETEAPPOC = 5,
 } oncompletion_t;
 
+typedef enum {
+    ACCESS_LIST_ASSET = 0,
+    ACCESS_LIST_ADDRESS,
+    ACCESS_LIST_APP,
+    ACCESS_LIST_BOX,
+    ACCESS_LIST_HOLDING,
+    ACCESS_LIST_LOCAL,
+    ACCESS_LIST_EMPTY
+} access_list_element_type_e;
+
 typedef struct {
     uint64_t total;
     uint64_t decimals;
@@ -138,7 +156,7 @@ typedef struct {
     uint64_t num_byteslice;
 } state_schema;
 
-#define MAX_ACCT  4
+#define MAX_ACCT  8
 #define ACCT_SIZE 32
 
 #define ACCT_FOREIGN_LIMIT 8
@@ -147,8 +165,15 @@ typedef struct {
 #define MAX_ARGLEN         2048
 #define MAX_FOREIGN_APPS   8
 #define MAX_FOREIGN_ASSETS 8
-#define MAX_APPROV_LEN     128
-#define MAX_CLEAR_LEN      32
+
+#if defined(TARGET_NANOX)
+#define MAX_ACCESS_LIST_ELEMENTS 7
+#else
+#define MAX_ACCESS_LIST_ELEMENTS 16
+#endif
+
+#define MAX_APPROV_LEN 128
+#define MAX_CLEAR_LEN  32
 
 // TXs structs
 typedef struct {
@@ -182,6 +207,28 @@ typedef struct {
 } box;
 
 typedef struct {
+    uint8_t d;
+    uint8_t p;
+} local;
+
+typedef struct {
+    uint8_t d;
+    uint8_t s;
+} holding;
+
+typedef struct {
+    access_list_element_type_e type;
+    union {
+        uint8_t address[32];
+        uint64_t app;
+        uint64_t asset;
+        box box;
+        holding holding;
+        local local;
+    };
+} access_list_element;
+
+typedef struct {
     uint64_t id;
     uint8_t account[32];
     uint8_t flag;
@@ -211,9 +258,16 @@ typedef struct {
     const uint8_t *cprog;
     uint16_t app_args_len[MAX_ARG];
 
-    uint64_t foreign_apps[MAX_FOREIGN_APPS];
-    uint64_t foreign_assets[MAX_FOREIGN_ASSETS];
-    box boxes[MAX_FOREIGN_APPS];
+    union {
+        struct {
+            uint64_t foreign_apps[MAX_FOREIGN_APPS];
+            uint64_t foreign_assets[MAX_FOREIGN_ASSETS];
+            box boxes[MAX_FOREIGN_APPS];
+        } foreign;
+        access_list_element access_list[MAX_ACCESS_LIST_ELEMENTS];
+    };
+    uint8_t num_access_list_element;
+    uint8_t access_list_display_offset;  // Display position offset for access_list items
 
 } txn_application;
 
@@ -317,6 +371,7 @@ typedef enum {
     IDX_APPROVE,
     IDX_CLEAR,
     IDX_REJECT_VERSION,
+    IDX_ACCESS_LIST
 } txn_application_index_e;
 
 typedef enum {
