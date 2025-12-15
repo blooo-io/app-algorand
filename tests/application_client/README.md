@@ -23,7 +23,6 @@ If you **fork the algorand app** to implement your own Ledger app, you can **ext
 The `application_client` package contains:
 
 - `algorand_command_sender.py` — Low-level command encoding and APDU transmission
-- `algorand_transaction.py` — Helpers to craft and serialize transactions
 - `algorand_response_unpacker.py` — Functions to decode responses from the app
 - `algorand_types.py` — Type definitions and data structures for Algorand operations
 - `py.typed` — Marker file for type checkers (e.g. `mypy`)
