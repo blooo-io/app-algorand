@@ -1,6 +1,6 @@
-# Standalone Functional Tests
+# Functional Tests
 
-This directory contains the **standalone functional test suite** for the Ledger application.  
+This directory contains the ** functional test suite** for the Ledger application.  
 It is intended to validate the application’s behavior in a **generic context**, when launched directly from the device's dashboard.
 
 These tests are written using:
@@ -12,7 +12,7 @@ These tests are written using:
 
 ## Purpose
 
-The standalone test suite ensures that:
+The test suite ensures that:
 
 - The application launches correctly from the dashboard
 - The main menu and navigation behave as expected
@@ -25,11 +25,23 @@ The standalone test suite ensures that:
 ## Directory Structure
 
 ```text
-standalone/
+tests/
+├── application_client/      # Python client library for communicating with the app
+│   ├── __init__.py
+│   ├── algorand_command_sender.py   # APDU command builder
+│   ├── algorand_response_unpacker.py # Response parser
+│   ├── algorand_types.py            # Type definitions
+│   ├── py.typed                     # PEP 561 marker for typed package
+│   ├── README.md                    # Client library documentation
+│   └── setup.cfg                    # Package configuration
+├── __init__.py              # Package marker
 ├── conftest.py              # Pytest fixtures and device setup
-├── test_*.py                # Functional test cases
-├── snapshots/               # Ragger UI snapshots
-├── snapshots-tmp/           # Temporary snapshot diffs (not tracked in git)
+├── data.py                  # Test data and constants
 ├── requirements.txt         # Python dependencies
+├── setup.cfg                # Pytest configuration
+├── snapshots/               # Ragger UI snapshots for visual regression
+├── snapshots-tmp/           # Temporary snapshot diffs (not tracked in git)
+├── test_*.py                # Functional test cases
+├── usage.md                 # Usage documentation
 └── utils.py                 # Local test helpers
 ```
