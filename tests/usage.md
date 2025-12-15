@@ -1,4 +1,4 @@
-<!-- # How to use the Ragger test framework
+# How to use the Ragger test framework
 
 This framework allows testing the application on the Speculos emulator or on a real device using LedgerComm or LedgerWallet
 
@@ -75,4 +75,4 @@ Custom pytest options
     --display                   on Speculos, enables the display of the app screen using QT
     --golden_run                on Speculos, screen comparison functions will save the current screen instead of comparing
     --log_apdu_file <filepath>  log all apdu exchanges to the file in parameter. The previous file content is erased
-``` -->
+```
