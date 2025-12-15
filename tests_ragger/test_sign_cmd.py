@@ -5,11 +5,13 @@ from ragger.error import ExceptionRAPDU
 from ragger.navigator.navigation_scenario import NavigateWithScenario
 from ragger.navigator import NavInsID, Navigator
 
+from ledgered.devices import DeviceType
+
 from .application_client.algorand_command_sender import AlgorandCommandSender, Errors
 from .application_client.algorand_response_unpacker import (
     unpack_get_public_key_response,
 )
-from .utils import check_tx_signature_validity, encode_aprv_transaction
+from .utils import check_tx_signature_validity, encode_transaction
 from .data import (
     txAssetFreeze,
     txAssetXfer,
@@ -19,6 +21,27 @@ from .data import (
     txApplication,
     txApplicationLong,
     txAprv,
+    txAlAddress,
+    txAlMultipleAddresses,
+    txAlAsset,
+    txAlApplication,
+    txAlHolding,
+    txMultipleHoldings,
+    txAlLocals,
+    txAlBox,
+    txAlEmptyBoxRef,
+    txAlMixedResources,
+    txAlMixedWithBoxAndLocals,
+    txAlMaxElementsNanoX,
+    txAlMaxElementsOtherDevices,
+    txAlOverMaxElements,
+    txAlMultipleAssets,
+    txAlMultipleApplications,
+    txAlComplexMixHoldingAndLocals,
+    txAlHoldingMissingAddressIndex,
+    txAlHoldingMissingAssetIndex,
+    txAlLocalsMissingAddressIndex,
+    txAlLocalsMissingApplicationIndex,
 )
 
 
@@ -340,7 +363,421 @@ def test_sign_aprv_tx(
     default_screenshot_path: str,
 ) -> None:
 
-    tx_blob = encode_aprv_transaction(txAprv)
+    tx_blob = encode_transaction(txAprv)
+
+    sign_tx_and_verify(
+        tx_blob,
+        backend,
+        navigator,
+        test_name,
+        default_screenshot_path,
+    )
+
+
+# In this test we send to the device a Sign Access list with address resource transaction to sign and validate it on screen
+# We will ensure that the displayed information is correct by using screenshots comparison
+def test_sign_al_address_tx(
+    backend: BackendInterface,
+    navigator: Navigator,
+    test_name: str,
+    default_screenshot_path: str,
+) -> None:
+
+    tx_blob = encode_transaction(txAlAddress)
+
+    sign_tx_and_verify(
+        tx_blob,
+        backend,
+        navigator,
+        test_name,
+        default_screenshot_path,
+    )
+
+
+# In this test we send to the device a Sign Access list with holding resource transaction to sign and validate it on screen
+# We will ensure that the displayed information is correct by using screenshots comparison
+def test_sign_al_holding_tx(
+    backend: BackendInterface,
+    navigator: Navigator,
+    test_name: str,
+    default_screenshot_path: str,
+) -> None:
+
+    tx_blob = encode_transaction(txAlHolding)
+
+    sign_tx_and_verify(
+        tx_blob,
+        backend,
+        navigator,
+        test_name,
+        default_screenshot_path,
+    )
+
+
+# In this test we send to the device a Sign Access list with multiple address resources transaction to sign and validate it on screen
+# We will ensure that the displayed information is correct by using screenshots comparison
+def test_sign_al_multiple_addresses_tx(
+    backend: BackendInterface,
+    navigator: Navigator,
+    test_name: str,
+    default_screenshot_path: str,
+) -> None:
+
+    tx_blob = encode_transaction(txAlMultipleAddresses)
+
+    sign_tx_and_verify(
+        tx_blob,
+        backend,
+        navigator,
+        test_name,
+        default_screenshot_path,
+    )
+
+
+# In this test we send to the device a Sign Access list with multiple holding resources transaction to sign and validate it on screen
+# We will ensure that the displayed information is correct by using screenshots comparison
+def test_sign_al_multiple_holdings_tx(
+    backend: BackendInterface,
+    navigator: Navigator,
+    test_name: str,
+    default_screenshot_path: str,
+) -> None:
+
+    tx_blob = encode_transaction(txMultipleHoldings)
+
+    print("Notre tx encoder ressemble a ca: 0x", tx_blob.hex())
+
+    sign_tx_and_verify(
+        tx_blob,
+        backend,
+        navigator,
+        test_name,
+        default_screenshot_path,
+    )
+
+
+# In this test we send to the device a Sign Access list with asset resource to sign and validate it on screen
+# We will ensure that the displayed information is correct by using screenshots comparison
+def test_sign_al_asset_tx(
+    backend: BackendInterface,
+    navigator: Navigator,
+    test_name: str,
+    default_screenshot_path: str,
+) -> None:
+
+    tx_blob = encode_transaction(txAlAsset)
+
+    sign_tx_and_verify(
+        tx_blob,
+        backend,
+        navigator,
+        test_name,
+        default_screenshot_path,
+    )
+
+
+# In this test we send to the device a Sign Access list with application resource to sign and validate it on screen
+# We will ensure that the displayed information is correct by using screenshots comparison
+def test_sign_al_application_tx(
+    backend: BackendInterface,
+    navigator: Navigator,
+    test_name: str,
+    default_screenshot_path: str,
+) -> None:
+
+    tx_blob = encode_transaction(txAlApplication)
+
+    sign_tx_and_verify(
+        tx_blob,
+        backend,
+        navigator,
+        test_name,
+        default_screenshot_path,
+    )
+
+
+# In this test we send to the device a Sign Access list with locals resource to sign and validate it on screen
+# We will ensure that the displayed information is correct by using screenshots comparison
+def test_sign_al_locals_tx(
+    backend: BackendInterface,
+    navigator: Navigator,
+    test_name: str,
+    default_screenshot_path: str,
+) -> None:
+
+    tx_blob = encode_transaction(txAlLocals)
+
+    sign_tx_and_verify(
+        tx_blob,
+        backend,
+        navigator,
+        test_name,
+        default_screenshot_path,
+    )
+
+
+# In this test we send to the device a Sign Access list with box resource to sign and validate it on screen
+# We will ensure that the displayed information is correct by using screenshots comparison
+def test_sign_al_box_tx(
+    backend: BackendInterface,
+    navigator: Navigator,
+    test_name: str,
+    default_screenshot_path: str,
+) -> None:
+
+    tx_blob = encode_transaction(txAlBox)
+
+    sign_tx_and_verify(
+        tx_blob,
+        backend,
+        navigator,
+        test_name,
+        default_screenshot_path,
+    )
+
+
+# In this test we send to the device a Sign Access list with empty box reference to sign and validate it on screen
+# We will ensure that the displayed information is correct by using screenshots comparison
+def test_sign_al_empty_box_ref_tx(
+    backend: BackendInterface,
+    navigator: Navigator,
+    test_name: str,
+    default_screenshot_path: str,
+) -> None:
+
+    tx_blob = encode_transaction(txAlEmptyBoxRef)
+
+    sign_tx_and_verify(
+        tx_blob,
+        backend,
+        navigator,
+        test_name,
+        default_screenshot_path,
+    )
+
+
+# In this test we send to the device a Sign Access list with mixed resources (address, asset, application, empty) to sign and validate it on screen
+# We will ensure that the displayed information is correct by using screenshots comparison
+def test_sign_al_mixed_resources_tx(
+    backend: BackendInterface,
+    navigator: Navigator,
+    test_name: str,
+    default_screenshot_path: str,
+) -> None:
+
+    tx_blob = encode_transaction(txAlMixedResources)
+
+    sign_tx_and_verify(
+        tx_blob,
+        backend,
+        navigator,
+        test_name,
+        default_screenshot_path,
+    )
+
+
+# In this test we send to the device a Sign Access list with box and locals resources together to sign and validate it on screen
+# We will ensure that the displayed information is correct by using screenshots comparison
+def test_sign_al_mixed_with_box_and_locals_tx(
+    backend: BackendInterface,
+    navigator: Navigator,
+    test_name: str,
+    default_screenshot_path: str,
+) -> None:
+
+    tx_blob = encode_transaction(txAlMixedWithBoxAndLocals)
+
+    sign_tx_and_verify(
+        tx_blob,
+        backend,
+        navigator,
+        test_name,
+        default_screenshot_path,
+    )
+
+
+# In this test we send to the device a Sign Access list with  11 or 16 elements (maximum valid for NanoX|Other Devices) to sign and validate it on screen
+# We will ensure that the displayed information is correct by using screenshots comparison
+def test_sign_al_max_elements_tx(
+    backend: BackendInterface,
+    navigator: Navigator,
+    test_name: str,
+    default_screenshot_path: str,
+) -> None:
+    print(
+        "km_logs [test_sign_cmd.py] (test_sign_al_max_elements_tx) - device: ",
+        backend.device,
+    )
+    if backend.device.type == DeviceType.NANOX:
+        tx_blob = encode_transaction(txAlMaxElementsNanoX)
+    else:
+        tx_blob = encode_transaction(txAlMaxElementsOtherDevices)
+
+    sign_tx_and_verify(
+        tx_blob,
+        backend,
+        navigator,
+        test_name,
+        default_screenshot_path,
+    )
+
+
+# In this test we send to the device a Sign Access list with multiple asset references to sign and validate it on screen
+# We will ensure that the displayed information is correct by using screenshots comparison
+def test_sign_al_multiple_assets_tx(
+    backend: BackendInterface,
+    navigator: Navigator,
+    test_name: str,
+    default_screenshot_path: str,
+) -> None:
+
+    tx_blob = encode_transaction(txAlMultipleAssets)
+
+    sign_tx_and_verify(
+        tx_blob,
+        backend,
+        navigator,
+        test_name,
+        default_screenshot_path,
+    )
+
+
+# In this test we send to the device a Sign Access list with multiple application references to sign and validate it on screen
+# We will ensure that the displayed information is correct by using screenshots comparison
+def test_sign_al_multiple_applications_tx(
+    backend: BackendInterface,
+    navigator: Navigator,
+    test_name: str,
+    default_screenshot_path: str,
+) -> None:
+
+    tx_blob = encode_transaction(txAlMultipleApplications)
+
+    sign_tx_and_verify(
+        tx_blob,
+        backend,
+        navigator,
+        test_name,
+        default_screenshot_path,
+    )
+
+
+# In this test we send to the device a Sign Access list with holding and locals resources together to sign and validate it on screen
+# We will ensure that the displayed information is correct by using screenshots comparison
+def test_sign_al_complex_mix_holding_and_locals_tx(
+    backend: BackendInterface,
+    navigator: Navigator,
+    test_name: str,
+    default_screenshot_path: str,
+) -> None:
+
+    tx_blob = encode_transaction(txAlComplexMixHoldingAndLocals)
+
+    sign_tx_and_verify(
+        tx_blob,
+        backend,
+        navigator,
+        test_name,
+        default_screenshot_path,
+    )
+
+
+# In this test we send to the device a Sign Access list with 12 elements (exceeds maximum of 11)
+# We expect this to fail with a parsing error
+def test_sign_al_over_max_elements_tx(
+    backend: BackendInterface,
+) -> None:
+
+    client = AlgorandCommandSender(backend)
+
+    tx_blob = encode_transaction(txAlOverMaxElements)
+
+    with pytest.raises(ExceptionRAPDU) as e:
+        with client.sign_tx(account_id=ACCOUNT_ID, transaction=tx_blob):
+            pass
+
+    # Assert that we have received a parsing failure error
+    assert e.value.status == Errors.SW_DATA_INVALID
+
+
+# In this test we send a holding resource missing the address index (d)
+# We will ensure that the displayed information is correct by using screenshots comparison
+
+
+def test_sign_al_holding_missing_address_index_tx(
+    backend: BackendInterface,
+    navigator: Navigator,
+    test_name: str,
+    default_screenshot_path: str,
+) -> None:
+
+    tx_blob = encode_transaction(txAlHoldingMissingAddressIndex)
+
+    sign_tx_and_verify(
+        tx_blob,
+        backend,
+        navigator,
+        test_name,
+        default_screenshot_path,
+    )
+
+
+# In this test we send a holding resource missing the asset index (s)
+# We will ensure that the displayed information is correct by using screenshots comparison
+
+
+def test_sign_al_holding_missing_asset_index_tx(
+    backend: BackendInterface,
+    navigator: Navigator,
+    test_name: str,
+    default_screenshot_path: str,
+) -> None:
+
+    tx_blob = encode_transaction(txAlHoldingMissingAssetIndex)
+
+    sign_tx_and_verify(
+        tx_blob,
+        backend,
+        navigator,
+        test_name,
+        default_screenshot_path,
+    )
+
+
+# In this test we send a locals resource missing the address index (d)
+# We will ensure that the displayed information is correct by using screenshots comparison
+
+
+def test_sign_al_locals_missing_address_index_tx(
+    backend: BackendInterface,
+    navigator: Navigator,
+    test_name: str,
+    default_screenshot_path: str,
+) -> None:
+
+    tx_blob = encode_transaction(txAlLocalsMissingAddressIndex)
+
+    sign_tx_and_verify(
+        tx_blob,
+        backend,
+        navigator,
+        test_name,
+        default_screenshot_path,
+    )
+
+
+# In this test we send a locals resource missing the application index (p)
+# We will ensure that the displayed information is correct by using screenshots comparison
+
+
+def test_sign_al_locals_missing_application_index_tx(
+    backend: BackendInterface,
+    navigator: Navigator,
+    test_name: str,
+    default_screenshot_path: str,
+) -> None:
+
+    tx_blob = encode_transaction(txAlLocalsMissingApplicationIndex)
 
     sign_tx_and_verify(
         tx_blob,

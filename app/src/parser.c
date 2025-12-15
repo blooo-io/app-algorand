@@ -169,24 +169,120 @@ static parser_error_t parser_printBoxes(char *outKey, uint16_t outKeyLen, char *
     if (tmpIdx >= MAX_FOREIGN_APPS)
         return parser_unexpected_value;
 
-    snprintf(outKey, outKeyLen, "Box %d", application->boxes[tmpIdx].i);
+    snprintf(outKey, outKeyLen, "Box %d", application->foreign.boxes[tmpIdx].i);
 
-    if (application->boxes[tmpIdx].n != NULL && application->boxes[tmpIdx].n_len > 0) {
+    if (application->foreign.boxes[tmpIdx].n != NULL && application->foreign.boxes[tmpIdx].n_len > 0) {
         bool printable = true;
-        for (uint16_t j = 0; j < application->boxes[tmpIdx].n_len; j++) {
-            printable &= IS_PRINTABLE(*(application->boxes[tmpIdx].n + j));
+        for (uint16_t j = 0; j < application->foreign.boxes[tmpIdx].n_len; j++) {
+            printable &= IS_PRINTABLE(*(application->foreign.boxes[tmpIdx].n + j));
         }
 
         if (printable) {
-            pageStringExt(outVal, outValLen, (const char *)application->boxes[tmpIdx].n,
-                          application->boxes[tmpIdx].n_len, pageIdx, pageCount);
+            pageStringExt(outVal, outValLen, (const char *)application->foreign.boxes[tmpIdx].n,
+                          application->foreign.boxes[tmpIdx].n_len, pageIdx, pageCount);
         } else {
-            base64_encode(outVal, outValLen, (const uint8_t *)application->boxes[tmpIdx].n,
-                          application->boxes[tmpIdx].n_len);
+            base64_encode(outVal, outValLen, (const uint8_t *)application->foreign.boxes[tmpIdx].n,
+                          application->foreign.boxes[tmpIdx].n_len);
         }
     } else {
         char null_box[8] = {0};
         base64_encode(outVal, outValLen, (const uint8_t *)null_box, sizeof(null_box));
+    }
+
+    return parser_ok;
+}
+
+static parser_error_t parser_printAccessListElements(char *outKey, uint16_t outKeyLen, char *outVal, uint16_t outValLen,
+                                                     uint8_t displayIdx, uint8_t pageIdx, uint8_t *pageCount,
+                                                     txn_application *application)
+{
+    if (outKey == NULL || outVal == NULL || application == NULL) {
+        return parser_unexpected_error;
+    }
+
+    // Calculate the index within access_list array using the stored display offset
+    const uint8_t tmpIdx = displayIdx - application->access_list_display_offset;
+    if (tmpIdx >= application->num_access_list_element) {
+        return parser_unexpected_value;
+    }
+
+    *pageCount = 1;
+    access_list_element *element = &application->access_list[tmpIdx];
+    char buff[65] = {0};
+    uint8_t temp_offset = 0;
+
+    switch (element->type) {
+    case ACCESS_LIST_ASSET:
+        snprintf(outKey, outKeyLen, "al[%d] - Asset ID", tmpIdx + 1);
+        if (uint64_to_str(outVal, outValLen, element->asset) != NULL) {
+            return parser_unexpected_error;
+        }
+        break;
+
+    case ACCESS_LIST_ADDRESS:
+        snprintf(outKey, outKeyLen, "al[%d] - Address", tmpIdx + 1);
+        if (encodePubKey((uint8_t *)buff, sizeof(buff), element->address) == 0) {
+            return parser_unexpected_buffer_end;
+        }
+        pageString(outVal, outValLen, buff, pageIdx, pageCount);
+        break;
+
+    case ACCESS_LIST_APP:
+        snprintf(outKey, outKeyLen, "al[%d] - App ID", tmpIdx + 1);
+        if (uint64_to_str(outVal, outValLen, element->app) != NULL) {
+            return parser_unexpected_error;
+        }
+        break;
+
+    case ACCESS_LIST_BOX:
+        snprintf(outKey, outKeyLen, "al[%d] - Box (%d)", tmpIdx + 1, element->box.i);
+        if (element->box.n != NULL && element->box.n_len > 0) {
+            bool printable = true;
+            for (uint16_t j = 0; j < element->box.n_len; j++) {
+                printable &= IS_PRINTABLE(*(element->box.n + j));
+            }
+            if (printable) {
+                pageStringExt(outVal, outValLen, (const char *)element->box.n, element->box.n_len, pageIdx, pageCount);
+            } else {
+                base64_encode(outVal, outValLen, (const uint8_t *)element->box.n, element->box.n_len);
+            }
+        } else {
+            char null_box[8] = {0};
+            base64_encode(outVal, outValLen, (const uint8_t *)null_box, sizeof(null_box));
+        }
+        break;
+
+    case ACCESS_LIST_HOLDING:
+        temp_offset = 0;
+        snprintf(outKey, outKeyLen, "al[%d] - Holding", tmpIdx + 1);
+        if (element->holding.d > 0) {
+            temp_offset +=
+                snprintf(outVal + temp_offset, outValLen - temp_offset, "Address: al[%d]\n", element->holding.d);
+        }
+        if (element->holding.s > 0) {
+            snprintf(outVal + temp_offset, outValLen - temp_offset, "Asset ID: al[%d]", element->holding.s);
+        }
+        break;
+
+    case ACCESS_LIST_LOCAL:
+        temp_offset = 0;
+        snprintf(outKey, outKeyLen, "al[%d] - Local", tmpIdx + 1);
+        if (element->local.d > 0) {
+            temp_offset +=
+                snprintf(outVal + temp_offset, outValLen - temp_offset, "Address: al[%d]\n", element->local.d);
+        }
+        if (element->local.p > 0) {
+            snprintf(outVal + temp_offset, outValLen - temp_offset, "App ID: al[%d]", element->local.p);
+        }
+        break;
+
+    case ACCESS_LIST_EMPTY:
+        snprintf(outKey, outKeyLen, "al[%d] - Empty", tmpIdx + 1);
+        snprintf(outVal, outValLen, " ");
+        break;
+
+    default:
+        return parser_unexpected_error;
     }
 
     return parser_ok;
@@ -589,6 +685,10 @@ static parser_error_t parser_printTxApplication(parser_context_t *ctx, uint8_t d
         }
         return parser_ok;
 
+    case IDX_ACCESS_LIST:
+        return parser_printAccessListElements(outKey, outKeyLen, outVal, outValLen, displayIdx, pageIdx, pageCount,
+                                              application);
+
     case IDX_REJECT_VERSION:
         snprintf(outKey, outKeyLen, "Reject version");
         if (application->reject_version > 0) {
@@ -637,7 +737,7 @@ static parser_error_t parser_printTxApplication(parser_context_t *ctx, uint8_t d
         if (tmpIdx >= MAX_FOREIGN_APPS)
             return parser_unexpected_value;
         snprintf(outKey, outKeyLen, "Foreign app %d", tmpIdx);
-        if (uint64_to_str(outVal, outValLen, application->foreign_apps[tmpIdx]) != NULL) {
+        if (uint64_to_str(outVal, outValLen, application->foreign.foreign_apps[tmpIdx]) != NULL) {
             return parser_unexpected_error;
         }
         return parser_ok;
@@ -649,7 +749,7 @@ static parser_error_t parser_printTxApplication(parser_context_t *ctx, uint8_t d
         if (tmpIdx >= MAX_FOREIGN_ASSETS)
             return parser_unexpected_value;
         snprintf(outKey, outKeyLen, "Foreign asset %d", tmpIdx);
-        if (uint64_to_str(outVal, outValLen, application->foreign_assets[tmpIdx]) != NULL) {
+        if (uint64_to_str(outVal, outValLen, application->foreign.foreign_assets[tmpIdx]) != NULL) {
             return parser_unexpected_error;
         }
         return parser_ok;

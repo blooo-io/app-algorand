@@ -5,7 +5,7 @@ import re
 import json
 import hashlib
 import base64
-import msgpack # type: ignore[import-not-found]
+import msgpack  # type: ignore[import-not-found]
 import ed25519  # type: ignore[import-not-found]
 import canonicaljson  # type: ignore[import-not-found]
 
@@ -64,23 +64,6 @@ def check_signature_validity(
         # Other errors (e.g., invalid key format)
         return False
 
-
-# def verify_name(name: str) -> None:
-#     """Verify the app name, based on defines in Makefile
-
-#     Args:
-#         name (str): Name to be checked
-#     """
-
-#     name_str = ""
-#     lines = _read_makefile()
-#     name_re = re.compile(r"^APPNAME\s?=\s?\"?(?P<val>\w+)\"?", re.I)
-#     for line in lines:
-#         info = name_re.match(line)
-#         if info:
-#             dinfo = info.groupdict()
-#             name_str = dinfo["val"]
-#     assert name == name_str
 
 
 def verify_version(version: str) -> None:
@@ -206,13 +189,13 @@ def address_to_public_key(address: str) -> bytes:
     return decoded[:32]
 
 
-def encode_aprv_transaction(aprv_transaction: dict) -> bytes:
-    """Encode an APRV transaction as a MessagePack blob.
+def encode_transaction(transaction: dict) -> bytes:
+    """Encode a transaction as a MessagePack blob.
 
     Args:
-        aprv_transaction: The APRV transaction to encode
+        transaction: The transaction to encode
 
     Returns:
         bytes: The MessagePack blob
     """
-    return msgpack.packb(aprv_transaction, use_bin_type=True)
+    return msgpack.packb(transaction, use_bin_type=True)
