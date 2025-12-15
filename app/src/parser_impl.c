@@ -880,7 +880,7 @@ __Z_INLINE parser_error_t _readHoldingElement(parser_context_t *c, holding *hold
         } else if (strncmp((char *)key, KEY_APP_ASSET, sizeof(KEY_APP_ASSET)) == 0) {
             CHECK_ERROR(_readUInt8(c, &holding->s));
         } else {
-            return parser_unexpected_error;  // create specific error
+            return parser_unexpected_error;
         }
     }
 
@@ -949,8 +949,6 @@ __Z_INLINE parser_error_t _readAccessListElement(parser_context_t *c, access_lis
 
 parser_error_t _readAccessList(parser_context_t *c, access_list_element elements[], uint8_t *num_elements)
 {
-    // Check current byte
-
     // get array size
     CHECK_ERROR(_readArraySize(c, num_elements))
     if (*num_elements > MAX_ACCESS_LIST_ELEMENTS) {
