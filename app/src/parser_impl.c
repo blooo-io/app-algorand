@@ -1303,18 +1303,21 @@ static parser_error_t _readTxApplication(parser_context_t *c, parser_tx_t *v)
     }
     DISPLAY_ITEM(IDX_APP_ID, 1, tx_num_items)
 
-    if (_findKey(c, KEY_APP_REJECT_VERSION) == parser_ok) {
-        CHECK_ERROR(_readInteger(c, &application->reject_version))
-    }
-
-    if (_findKey(c, KEY_APP_ACCESS_LIST) == parser_ok) {
-        CHECK_ERROR(_readAccessList(c, application->access_list, &application->num_access_list_element))
-    }
-
     if (_findKey(c, KEY_APP_ONCOMPLETION) == parser_ok) {
         CHECK_ERROR(_readInteger(c, &application->oncompletion))
     }
     DISPLAY_ITEM(IDX_ON_COMPLETION, 1, tx_num_items)
+
+    if (_findKey(c, KEY_APP_REJECT_VERSION) == parser_ok) {
+        CHECK_ERROR(_readInteger(c, &application->reject_version))
+        DISPLAY_ITEM(IDX_REJECT_VERSION, 1, tx_num_items)
+    }
+
+    if (_findKey(c, KEY_APP_ACCESS_LIST) == parser_ok) {
+        CHECK_ERROR(_readAccessList(c, application->access_list, &application->num_access_list_element))
+        application->access_list_display_offset = tx_num_items;
+        DISPLAY_ITEM(IDX_ACCESS_LIST, application->num_access_list_element, tx_num_items)
+    }
 
     if (_findKey(c, KEY_APP_BOXES) == parser_ok) {
         CHECK_ERROR(_readBoxes(c, application->boxes, &application->num_boxes))
@@ -1388,17 +1391,6 @@ static parser_error_t _readTxApplication(parser_context_t *c, parser_tx_t *v)
         application->cprog_len + application->aprog_len > PAGE_LEN * (1 + application->extra_pages)) {
         // ExtraPages needs to be checked only on application creation
         return parser_program_fields_too_long;
-    }
-
-    // Display reject_version and access_list at the end (matching enum order)
-    if (application->reject_version > 0) {
-        DISPLAY_ITEM(IDX_REJECT_VERSION, 1, tx_num_items)
-    }
-
-    // Store the display offset before adding access_list items
-    application->access_list_display_offset = tx_num_items;
-    if (application->num_access_list_element > 0) {
-        DISPLAY_ITEM(IDX_ACCESS_LIST, application->num_access_list_element, tx_num_items)
     }
 
     return parser_ok;
