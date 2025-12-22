@@ -213,14 +213,14 @@ static parser_error_t parser_printAccessListElements(char *outKey, uint16_t outK
 
     switch (element->type) {
     case ACCESS_LIST_ASSET:
-        snprintf(outKey, outKeyLen, "al[%d] - Asset ID", tmpIdx + 1);
+        snprintf(outKey, outKeyLen, "Access Asset ID");
         if (uint64_to_str(outVal, outValLen, element->asset) != NULL) {
             return parser_unexpected_error;
         }
         break;
 
     case ACCESS_LIST_ADDRESS:
-        snprintf(outKey, outKeyLen, "al[%d] - Address", tmpIdx + 1);
+        snprintf(outKey, outKeyLen, "Access Address");
         if (encodePubKey((uint8_t *)buff, sizeof(buff), element->address) == 0) {
             return parser_unexpected_buffer_end;
         }
@@ -228,14 +228,14 @@ static parser_error_t parser_printAccessListElements(char *outKey, uint16_t outK
         break;
 
     case ACCESS_LIST_APP:
-        snprintf(outKey, outKeyLen, "al[%d] - App ID", tmpIdx + 1);
+        snprintf(outKey, outKeyLen, "Access App ID");
         if (uint64_to_str(outVal, outValLen, element->app) != NULL) {
             return parser_unexpected_error;
         }
         break;
 
     case ACCESS_LIST_BOX:
-        snprintf(outKey, outKeyLen, "al[%d] - Box (%d)", tmpIdx + 1, element->box.i);
+        snprintf(outKey, outKeyLen, "Access Box (%d)", element->box.i);
         if (element->box.n != NULL && element->box.n_len > 0) {
             bool printable = true;
             for (uint16_t j = 0; j < element->box.n_len; j++) {
@@ -254,7 +254,7 @@ static parser_error_t parser_printAccessListElements(char *outKey, uint16_t outK
 
     case ACCESS_LIST_HOLDING:
         temp_offset = 0;
-        snprintf(outKey, outKeyLen, "al[%d] - Holding", tmpIdx + 1);
+        snprintf(outKey, outKeyLen, "Access Holding");
         if (element->holding.d > 0) {
             temp_offset +=
                 snprintf(outVal + temp_offset, outValLen - temp_offset, "Address: al[%d]\n", element->holding.d);
@@ -266,7 +266,7 @@ static parser_error_t parser_printAccessListElements(char *outKey, uint16_t outK
 
     case ACCESS_LIST_LOCAL:
         temp_offset = 0;
-        snprintf(outKey, outKeyLen, "al[%d] - Local", tmpIdx + 1);
+        snprintf(outKey, outKeyLen, "Access Local");
         if (element->local.d > 0) {
             temp_offset +=
                 snprintf(outVal + temp_offset, outValLen - temp_offset, "Address: al[%d]\n", element->local.d);
@@ -277,7 +277,7 @@ static parser_error_t parser_printAccessListElements(char *outKey, uint16_t outK
         break;
 
     case ACCESS_LIST_EMPTY:
-        snprintf(outKey, outKeyLen, "al[%d] - Empty", tmpIdx + 1);
+        snprintf(outKey, outKeyLen, "Access Empty");
         snprintf(outVal, outValLen, " ");
         break;
 
