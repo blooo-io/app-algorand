@@ -970,6 +970,42 @@ __Z_INLINE parser_error_t _readAccessListElement(parser_context_t *c, access_lis
     return parser_ok;
 }
 
+
+parser_error_t _readAccessListSize(parser_context_t *c, uint8_t *numAccessListElements, uint8_t maxAccessListElements){
+    CHECK_ERROR(_readArraySize(c, numAccessListElements))
+    if (*numAccessListElements > maxAccessListElements) {
+        return parser_msgpack_array_too_big;
+    }
+    return parser_ok;
+}
+
+parser_error_t _getAccessListElement(parser_context_t *c, access_list_element *accessListElement, uint8_t accessListElement_idx, uint8_t num_accessListElements){
+
+    uint8_t tmp_num_access_list_elements = 0;
+    CHECK_ERROR(_findKey(c, KEY_APP_ACCESS_LIST))
+    CHECK_ERROR(_readAccessListSize(c, &tmp_num_access_list_elements, num_accessListElements))
+    if (tmp_num_access_list_elements != num_accessListElements || accessListElement_idx >= num_accessListElements) {
+        return parser_unexpected_number_items;
+    }
+    // Read until we get the right access list element index
+    for (uint8_t i = 0; i < accessListElement_idx + 1; i++) {
+        CHECK_ERROR(_readAccessListElement(c, accessListElement))
+    }
+    return parser_ok;
+}
+
+
+parser_error_t _verifyAccessList(parser_context_t *c, uint8_t *num_al_elements, uint8_t maxNumAccessListElement)
+{
+    access_list_element tmpElement = {0};
+    CHECK_ERROR(_readAccessListSize(c, num_al_elements, maxNumAccessListElement))
+    for (uint8_t i = 0; i < *num_al_elements; i++) {
+        CHECK_ERROR(_readAccessListElement(c, &tmpElement))
+    }
+    return parser_ok;
+}
+
+
 parser_error_t _readAccessList(parser_context_t *c, access_list_element elements[], uint8_t *num_elements)
 {
     // get array size
@@ -1296,7 +1332,6 @@ static parser_error_t _readTxApplication(parser_context_t *c, parser_tx_t *v)
     application->reject_version = 0;
     application->num_access_list_element = 0;
     application->access_list_display_offset = 0;
-    explicit_bzero(application->access_list, sizeof(application->access_list));
 
     if (_findKey(c, KEY_APP_ID) == parser_ok) {
         CHECK_ERROR(_readInteger(c, &application->id))
@@ -1314,7 +1349,8 @@ static parser_error_t _readTxApplication(parser_context_t *c, parser_tx_t *v)
     }
 
     if (_findKey(c, KEY_APP_ACCESS_LIST) == parser_ok) {
-        CHECK_ERROR(_readAccessList(c, application->access_list, &application->num_access_list_element))
+
+        CHECK_ERROR(_verifyAccessList(c, &application->num_access_list_element, MAX_ACCESS_LIST_ELEMENTS))
         application->access_list_display_offset = tx_num_items;
         DISPLAY_ITEM(IDX_ACCESS_LIST, application->num_access_list_element, tx_num_items)
     }

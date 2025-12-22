@@ -192,7 +192,7 @@ static parser_error_t parser_printBoxes(char *outKey, uint16_t outKeyLen, char *
     return parser_ok;
 }
 
-static parser_error_t parser_printAccessListElements(char *outKey, uint16_t outKeyLen, char *outVal, uint16_t outValLen,
+static parser_error_t parser_printAccessListElements(parser_context_t *c, char *outKey, uint16_t outKeyLen, char *outVal, uint16_t outValLen,
                                                      uint8_t displayIdx, uint8_t pageIdx, uint8_t *pageCount,
                                                      txn_application *application)
 {
@@ -207,21 +207,25 @@ static parser_error_t parser_printAccessListElements(char *outKey, uint16_t outK
     }
 
     *pageCount = 1;
-    access_list_element *element = &application->access_list[tmpIdx];
+    access_list_element element = {0};
+    
+    // Use _getAccessListElement to retrieve the element from the transaction buffer
+    CHECK_ERROR(_getAccessListElement(c, &element, tmpIdx, application->num_access_list_element));
+    
     char buff[65] = {0};
     uint8_t temp_offset = 0;
 
-    switch (element->type) {
+    switch (element.type) {
     case ACCESS_LIST_ASSET:
         snprintf(outKey, outKeyLen, "Access Asset ID");
-        if (uint64_to_str(outVal, outValLen, element->asset) != NULL) {
+        if (uint64_to_str(outVal, outValLen, element.asset) != NULL) {
             return parser_unexpected_error;
         }
         break;
 
     case ACCESS_LIST_ADDRESS:
         snprintf(outKey, outKeyLen, "Access Address");
-        if (encodePubKey((uint8_t *)buff, sizeof(buff), element->address) == 0) {
+        if (encodePubKey((uint8_t *)buff, sizeof(buff), element.address) == 0) {
             return parser_unexpected_buffer_end;
         }
         pageString(outVal, outValLen, buff, pageIdx, pageCount);
@@ -229,22 +233,22 @@ static parser_error_t parser_printAccessListElements(char *outKey, uint16_t outK
 
     case ACCESS_LIST_APP:
         snprintf(outKey, outKeyLen, "Access App ID");
-        if (uint64_to_str(outVal, outValLen, element->app) != NULL) {
+        if (uint64_to_str(outVal, outValLen, element.app) != NULL) {
             return parser_unexpected_error;
         }
         break;
 
     case ACCESS_LIST_BOX:
-        snprintf(outKey, outKeyLen, "Access Box (%d)", element->box.i);
-        if (element->box.n != NULL && element->box.n_len > 0) {
+        snprintf(outKey, outKeyLen, "Access Box (%d)", element.box.i);
+        if (element.box.n != NULL && element.box.n_len > 0) {
             bool printable = true;
-            for (uint16_t j = 0; j < element->box.n_len; j++) {
-                printable &= IS_PRINTABLE(*(element->box.n + j));
+            for (uint16_t j = 0; j < element.box.n_len; j++) {
+                printable &= IS_PRINTABLE(*(element.box.n + j));
             }
             if (printable) {
-                pageStringExt(outVal, outValLen, (const char *)element->box.n, element->box.n_len, pageIdx, pageCount);
+                pageStringExt(outVal, outValLen, (const char *)element.box.n, element.box.n_len, pageIdx, pageCount);
             } else {
-                base64_encode(outVal, outValLen, (const uint8_t *)element->box.n, element->box.n_len);
+                base64_encode(outVal, outValLen, (const uint8_t *)element.box.n, element.box.n_len);
             }
         } else {
             char null_box[8] = {0};
@@ -255,24 +259,24 @@ static parser_error_t parser_printAccessListElements(char *outKey, uint16_t outK
     case ACCESS_LIST_HOLDING:
         temp_offset = 0;
         snprintf(outKey, outKeyLen, "Access Holding");
-        if (element->holding.d > 0) {
+        if (element.holding.d > 0) {
             temp_offset +=
-                snprintf(outVal + temp_offset, outValLen - temp_offset, "Address: al[%d]\n", element->holding.d);
+                snprintf(outVal + temp_offset, outValLen - temp_offset, "Address: al[%d]\n", element.holding.d);
         }
-        if (element->holding.s > 0) {
-            snprintf(outVal + temp_offset, outValLen - temp_offset, "Asset ID: al[%d]", element->holding.s);
+        if (element.holding.s > 0) {
+            snprintf(outVal + temp_offset, outValLen - temp_offset, "Asset ID: al[%d]", element.holding.s);
         }
         break;
 
     case ACCESS_LIST_LOCAL:
         temp_offset = 0;
         snprintf(outKey, outKeyLen, "Access Local");
-        if (element->local.d > 0) {
+        if (element.local.d > 0) {
             temp_offset +=
-                snprintf(outVal + temp_offset, outValLen - temp_offset, "Address: al[%d]\n", element->local.d);
+                snprintf(outVal + temp_offset, outValLen - temp_offset, "Address: al[%d]\n", element.local.d);
         }
-        if (element->local.p > 0) {
-            snprintf(outVal + temp_offset, outValLen - temp_offset, "App ID: al[%d]", element->local.p);
+        if (element.local.p > 0) {
+            snprintf(outVal + temp_offset, outValLen - temp_offset, "App ID: al[%d]", element.local.p);
         }
         break;
 
@@ -686,7 +690,7 @@ static parser_error_t parser_printTxApplication(parser_context_t *ctx, uint8_t d
         return parser_ok;
 
     case IDX_ACCESS_LIST:
-        return parser_printAccessListElements(outKey, outKeyLen, outVal, outValLen, displayIdx, pageIdx, pageCount,
+        return parser_printAccessListElements(ctx, outKey, outKeyLen, outVal, outValLen, displayIdx, pageIdx, pageCount,
                                               application);
 
     case IDX_REJECT_VERSION:
