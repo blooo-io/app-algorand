@@ -827,6 +827,10 @@ __Z_INLINE parser_error_t _readBoxElement(parser_context_t *c, box *box)
     uint8_t key[2] = {0};
     uint16_t mapSize = 0;
     CHECK_ERROR(_readMapSize(c, &mapSize))
+    if(mapSize > 2){
+        PRINTF("Box map size should be at most 2 but got %d\n", mapSize);
+        return parser_msgpack_array_too_big;
+    }
 
     box->i = 0;
     box->n_len = 0;
@@ -869,6 +873,10 @@ __Z_INLINE parser_error_t _readHoldingElement(parser_context_t *c, holding *hold
     uint8_t key[2] = {0};
     uint16_t mapSize = 0;
     CHECK_ERROR(_readMapSize(c, &mapSize))
+    if(mapSize > 2){
+        PRINTF("Holding map size should be at most 2 but got %d\n", mapSize);
+        return parser_msgpack_array_too_big;
+    }
     holding->d = 0;
     holding->s = 0;
 
@@ -892,6 +900,10 @@ __Z_INLINE parser_error_t _readLocalElement(parser_context_t *c, local *local)
     uint8_t key[2] = {0};
     uint16_t mapSize = 0;
     CHECK_ERROR(_readMapSize(c, &mapSize))
+    if(mapSize > 2){
+        PRINTF("Local map size should be at most 2 but got %d\n", mapSize);
+        return parser_msgpack_array_too_big;
+    }
     local->d = 0;
     local->p = 0;
 
