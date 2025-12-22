@@ -882,12 +882,14 @@ __Z_INLINE parser_error_t _readHoldingElement(parser_context_t *c, holding *hold
 
     for (uint16_t index = 0; index < mapSize; index++) {
         CHECK_ERROR(_readString(c, key, sizeof(key)))
-        if (strncmp((char *)key, KEY_APP_ADDRESS, sizeof(KEY_APP_ADDRESS)) == 0) {
+        switch (key[0]) {
+        case KEY_APP_ADDRESS[0]: // 'd'
             CHECK_ERROR(_readUInt8(c, &holding->d));
-
-        } else if (strncmp((char *)key, KEY_APP_ASSET, sizeof(KEY_APP_ASSET)) == 0) {
+            break;
+        case KEY_APP_ASSET[0]: // 's'
             CHECK_ERROR(_readUInt8(c, &holding->s));
-        } else {
+            break;
+        default:
             return parser_unexpected_error;
         }
     }
@@ -909,12 +911,14 @@ __Z_INLINE parser_error_t _readLocalElement(parser_context_t *c, local *local)
 
     for (uint16_t index = 0; index < mapSize; index++) {
         CHECK_ERROR(_readString(c, key, sizeof(key)))
-        if (strncmp((char *)key, KEY_APP_ADDRESS, sizeof(KEY_APP_ADDRESS)) == 0) {
+        switch (key[0]) {
+        case KEY_APP_ADDRESS[0]: // 'd'
             CHECK_ERROR(_readUInt8(c, &local->d));
-
-        } else if (strncmp((char *)key, KEY_APP_APP, sizeof(KEY_APP_APP)) == 0) {
+            break;
+        case KEY_APP_APP[0]: // 'p'
             CHECK_ERROR(_readUInt8(c, &local->p));
-        } else {
+            break;
+        default:
             return parser_unexpected_error;
         }
     }
@@ -935,26 +939,33 @@ __Z_INLINE parser_error_t _readAccessListElement(parser_context_t *c, access_lis
     CHECK_ERROR(_readString(c, key, sizeof(key)));
     // check if the string match a key
     // figure key: (s|d|p|b|h|l)
-    if (key[0] == 's') {
+    switch (key[0]) {
+    case KEY_APP_ASSET[0]: // 's'
         element->type = ACCESS_LIST_ASSET;
         CHECK_ERROR(_readInteger(c, &element->asset));
-
-    } else if (key[0] == 'd') {
+        break;
+    case KEY_APP_ADDRESS[0]: // 'd'
         element->type = ACCESS_LIST_ADDRESS;
         CHECK_ERROR(_readBinFixed(c, element->address, 32));
-    } else if (key[0] == 'p') {
+        break;
+    case KEY_APP_APP[0]: // 'p'
         element->type = ACCESS_LIST_APP;
         CHECK_ERROR(_readInteger(c, &element->app));
-    } else if (key[0] == 'b') {
+        break;
+    case KEY_APP_BOX[0]: // 'b'
         element->type = ACCESS_LIST_BOX;
         CHECK_ERROR(_readBoxElement(c, &element->box));
-    } else if (key[0] == 'h') {
+        break;
+    case KEY_APP_HOLDING[0]: // 'h'
         element->type = ACCESS_LIST_HOLDING;
         CHECK_ERROR(_readHoldingElement(c, &element->holding));
-
-    } else if (key[0] == 'l') {
+        break;
+    case KEY_APP_LOCAL[0]: // 'l'
         element->type = ACCESS_LIST_LOCAL;
         CHECK_ERROR(_readLocalElement(c, &element->local));
+        break;
+    default:
+        return parser_unexpected_error;
     }
     return parser_ok;
 }
