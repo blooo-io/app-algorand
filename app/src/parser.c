@@ -169,20 +169,20 @@ static parser_error_t parser_printBoxes(char *outKey, uint16_t outKeyLen, char *
     if (tmpIdx >= MAX_FOREIGN_APPS)
         return parser_unexpected_value;
 
-    snprintf(outKey, outKeyLen, "Box %d", application->foreign.boxes[tmpIdx].i);
+    snprintf(outKey, outKeyLen, "Box %d", application->boxes[tmpIdx].i);
 
-    if (application->foreign.boxes[tmpIdx].n != NULL && application->foreign.boxes[tmpIdx].n_len > 0) {
+    if (application->boxes[tmpIdx].n != NULL && application->boxes[tmpIdx].n_len > 0) {
         bool printable = true;
-        for (uint16_t j = 0; j < application->foreign.boxes[tmpIdx].n_len; j++) {
-            printable &= IS_PRINTABLE(*(application->foreign.boxes[tmpIdx].n + j));
+        for (uint16_t j = 0; j < application->boxes[tmpIdx].n_len; j++) {
+            printable &= IS_PRINTABLE(*(application->boxes[tmpIdx].n + j));
         }
 
         if (printable) {
-            pageStringExt(outVal, outValLen, (const char *)application->foreign.boxes[tmpIdx].n,
-                          application->foreign.boxes[tmpIdx].n_len, pageIdx, pageCount);
+            pageStringExt(outVal, outValLen, (const char *)application->boxes[tmpIdx].n,
+                          application->boxes[tmpIdx].n_len, pageIdx, pageCount);
         } else {
-            base64_encode(outVal, outValLen, (const uint8_t *)application->foreign.boxes[tmpIdx].n,
-                          application->foreign.boxes[tmpIdx].n_len);
+            base64_encode(outVal, outValLen, (const uint8_t *)application->boxes[tmpIdx].n,
+                          application->boxes[tmpIdx].n_len);
         }
     } else {
         char null_box[8] = {0};
@@ -737,7 +737,7 @@ static parser_error_t parser_printTxApplication(parser_context_t *ctx, uint8_t d
         if (tmpIdx >= MAX_FOREIGN_APPS)
             return parser_unexpected_value;
         snprintf(outKey, outKeyLen, "Foreign app %d", tmpIdx);
-        if (uint64_to_str(outVal, outValLen, application->foreign.foreign_apps[tmpIdx]) != NULL) {
+        if (uint64_to_str(outVal, outValLen, application->foreign_apps[tmpIdx]) != NULL) {
             return parser_unexpected_error;
         }
         return parser_ok;
@@ -749,7 +749,7 @@ static parser_error_t parser_printTxApplication(parser_context_t *ctx, uint8_t d
         if (tmpIdx >= MAX_FOREIGN_ASSETS)
             return parser_unexpected_value;
         snprintf(outKey, outKeyLen, "Foreign asset %d", tmpIdx);
-        if (uint64_to_str(outVal, outValLen, application->foreign.foreign_assets[tmpIdx]) != NULL) {
+        if (uint64_to_str(outVal, outValLen, application->foreign_assets[tmpIdx]) != NULL) {
             return parser_unexpected_error;
         }
         return parser_ok;

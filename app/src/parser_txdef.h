@@ -263,7 +263,7 @@ typedef struct {
             uint64_t foreign_apps[MAX_FOREIGN_APPS];
             uint64_t foreign_assets[MAX_FOREIGN_ASSETS];
             box boxes[MAX_FOREIGN_APPS];
-        } foreign;
+        };
         access_list_element access_list[MAX_ACCESS_LIST_ELEMENTS];
     };
     uint8_t num_access_list_element;

@@ -1294,19 +1294,19 @@ static parser_error_t _readTxApplication(parser_context_t *c, parser_tx_t *v)
     DISPLAY_ITEM(IDX_ON_COMPLETION, 1, tx_num_items)
 
     if (_findKey(c, KEY_APP_BOXES) == parser_ok) {
-        CHECK_ERROR(_readBoxes(c, application->foreign.boxes, &application->num_boxes))
+        CHECK_ERROR(_readBoxes(c, application->boxes, &application->num_boxes))
         DISPLAY_ITEM(IDX_BOXES, application->num_boxes, tx_num_items)
     }
 
     if (_findKey(c, KEY_APP_FOREIGN_APPS) == parser_ok) {
         CHECK_ERROR(
-            _readArrayU64(c, application->foreign.foreign_apps, &application->num_foreign_apps, MAX_FOREIGN_APPS))
+            _readArrayU64(c, application->foreign_apps, &application->num_foreign_apps, MAX_FOREIGN_APPS))
         DISPLAY_ITEM(IDX_FOREIGN_APP, application->num_foreign_apps, tx_num_items)
     }
 
     if (_findKey(c, KEY_APP_FOREIGN_ASSETS) == parser_ok) {
         CHECK_ERROR(
-            _readArrayU64(c, application->foreign.foreign_assets, &application->num_foreign_assets, MAX_FOREIGN_ASSETS))
+            _readArrayU64(c, application->foreign_assets, &application->num_foreign_assets, MAX_FOREIGN_ASSETS))
         DISPLAY_ITEM(IDX_FOREIGN_ASSET, application->num_foreign_assets, tx_num_items)
     }
 
