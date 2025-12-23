@@ -827,7 +827,7 @@ __Z_INLINE parser_error_t _readBoxElement(parser_context_t *c, box *box)
     uint8_t key[2] = {0};
     uint16_t mapSize = 0;
     CHECK_ERROR(_readMapSize(c, &mapSize))
-    if(mapSize > 2){
+    if (mapSize > 2) {
         PRINTF("Box map size should be at most 2 but got %d\n", mapSize);
         return parser_msgpack_array_too_big;
     }
@@ -873,7 +873,7 @@ __Z_INLINE parser_error_t _readHoldingElement(parser_context_t *c, holding *hold
     uint8_t key[2] = {0};
     uint16_t mapSize = 0;
     CHECK_ERROR(_readMapSize(c, &mapSize))
-    if(mapSize > 2){
+    if (mapSize > 2) {
         PRINTF("Holding map size should be at most 2 but got %d\n", mapSize);
         return parser_msgpack_array_too_big;
     }
@@ -883,10 +883,10 @@ __Z_INLINE parser_error_t _readHoldingElement(parser_context_t *c, holding *hold
     for (uint16_t index = 0; index < mapSize; index++) {
         CHECK_ERROR(_readString(c, key, sizeof(key)))
         switch (key[0]) {
-        case KEY_APP_ADDRESS[0]: // 'd'
+        case KEY_APP_ADDRESS[0]:  // 'd'
             CHECK_ERROR(_readUInt8(c, &holding->d));
             break;
-        case KEY_APP_ASSET[0]: // 's'
+        case KEY_APP_ASSET[0]:  // 's'
             CHECK_ERROR(_readUInt8(c, &holding->s));
             break;
         default:
@@ -902,7 +902,7 @@ __Z_INLINE parser_error_t _readLocalElement(parser_context_t *c, local *local)
     uint8_t key[2] = {0};
     uint16_t mapSize = 0;
     CHECK_ERROR(_readMapSize(c, &mapSize))
-    if(mapSize > 2){
+    if (mapSize > 2) {
         PRINTF("Local map size should be at most 2 but got %d\n", mapSize);
         return parser_msgpack_array_too_big;
     }
@@ -912,10 +912,10 @@ __Z_INLINE parser_error_t _readLocalElement(parser_context_t *c, local *local)
     for (uint16_t index = 0; index < mapSize; index++) {
         CHECK_ERROR(_readString(c, key, sizeof(key)))
         switch (key[0]) {
-        case KEY_APP_ADDRESS[0]: // 'd'
+        case KEY_APP_ADDRESS[0]:  // 'd'
             CHECK_ERROR(_readUInt8(c, &local->d));
             break;
-        case KEY_APP_APP[0]: // 'p'
+        case KEY_APP_APP[0]:  // 'p'
             CHECK_ERROR(_readUInt8(c, &local->p));
             break;
         default:
@@ -940,27 +940,27 @@ __Z_INLINE parser_error_t _readAccessListElement(parser_context_t *c, access_lis
     // check if the string match a key
     // figure key: (s|d|p|b|h|l)
     switch (key[0]) {
-    case KEY_APP_ASSET[0]: // 's'
+    case KEY_APP_ASSET[0]:  // 's'
         element->type = ACCESS_LIST_ASSET;
         CHECK_ERROR(_readInteger(c, &element->asset));
         break;
-    case KEY_APP_ADDRESS[0]: // 'd'
+    case KEY_APP_ADDRESS[0]:  // 'd'
         element->type = ACCESS_LIST_ADDRESS;
         CHECK_ERROR(_readBinFixed(c, element->address, 32));
         break;
-    case KEY_APP_APP[0]: // 'p'
+    case KEY_APP_APP[0]:  // 'p'
         element->type = ACCESS_LIST_APP;
         CHECK_ERROR(_readInteger(c, &element->app));
         break;
-    case KEY_APP_BOX[0]: // 'b'
+    case KEY_APP_BOX[0]:  // 'b'
         element->type = ACCESS_LIST_BOX;
         CHECK_ERROR(_readBoxElement(c, &element->box));
         break;
-    case KEY_APP_HOLDING[0]: // 'h'
+    case KEY_APP_HOLDING[0]:  // 'h'
         element->type = ACCESS_LIST_HOLDING;
         CHECK_ERROR(_readHoldingElement(c, &element->holding));
         break;
-    case KEY_APP_LOCAL[0]: // 'l'
+    case KEY_APP_LOCAL[0]:  // 'l'
         element->type = ACCESS_LIST_LOCAL;
         CHECK_ERROR(_readLocalElement(c, &element->local));
         break;
@@ -970,8 +970,8 @@ __Z_INLINE parser_error_t _readAccessListElement(parser_context_t *c, access_lis
     return parser_ok;
 }
 
-
-parser_error_t _readAccessListSize(parser_context_t *c, uint8_t *numAccessListElements, uint8_t maxAccessListElements){
+parser_error_t _readAccessListSize(parser_context_t *c, uint8_t *numAccessListElements, uint8_t maxAccessListElements)
+{
     CHECK_ERROR(_readArraySize(c, numAccessListElements))
     if (*numAccessListElements > maxAccessListElements) {
         return parser_msgpack_array_too_big;
@@ -979,8 +979,9 @@ parser_error_t _readAccessListSize(parser_context_t *c, uint8_t *numAccessListEl
     return parser_ok;
 }
 
-parser_error_t _getAccessListElement(parser_context_t *c, access_list_element *out_element, uint8_t in_element_idx, uint8_t in_total_elements){
-
+parser_error_t _getAccessListElement(parser_context_t *c, access_list_element *out_element, uint8_t in_element_idx,
+                                     uint8_t in_total_elements)
+{
     uint8_t tmp_num_access_list_elements = 0;
     CHECK_ERROR(_findKey(c, KEY_APP_ACCESS_LIST))
     CHECK_ERROR(_readAccessListSize(c, &tmp_num_access_list_elements, in_total_elements))
@@ -994,7 +995,6 @@ parser_error_t _getAccessListElement(parser_context_t *c, access_list_element *o
     return parser_ok;
 }
 
-
 parser_error_t _verifyAccessList(parser_context_t *c, uint8_t *num_al_elements, uint8_t maxNumAccessListElement)
 {
     access_list_element tmpElement = {0};
@@ -1004,7 +1004,6 @@ parser_error_t _verifyAccessList(parser_context_t *c, uint8_t *num_al_elements, 
     }
     return parser_ok;
 }
-
 
 static parser_error_t _readTxType(parser_context_t *c, parser_tx_t *v)
 {
@@ -1337,7 +1336,6 @@ static parser_error_t _readTxApplication(parser_context_t *c, parser_tx_t *v)
     }
 
     if (_findKey(c, KEY_APP_ACCESS_LIST) == parser_ok) {
-
         CHECK_ERROR(_verifyAccessList(c, &application->num_access_list_element, MAX_ACCESS_LIST_ELEMENTS))
         application->access_list_display_offset = tx_num_items;
         DISPLAY_ITEM(IDX_ACCESS_LIST, application->num_access_list_element, tx_num_items)
@@ -1349,14 +1347,12 @@ static parser_error_t _readTxApplication(parser_context_t *c, parser_tx_t *v)
     }
 
     if (_findKey(c, KEY_APP_FOREIGN_APPS) == parser_ok) {
-        CHECK_ERROR(
-            _readArrayU64(c, application->foreign_apps, &application->num_foreign_apps, MAX_FOREIGN_APPS))
+        CHECK_ERROR(_readArrayU64(c, application->foreign_apps, &application->num_foreign_apps, MAX_FOREIGN_APPS))
         DISPLAY_ITEM(IDX_FOREIGN_APP, application->num_foreign_apps, tx_num_items)
     }
 
     if (_findKey(c, KEY_APP_FOREIGN_ASSETS) == parser_ok) {
-        CHECK_ERROR(
-            _readArrayU64(c, application->foreign_assets, &application->num_foreign_assets, MAX_FOREIGN_ASSETS))
+        CHECK_ERROR(_readArrayU64(c, application->foreign_assets, &application->num_foreign_assets, MAX_FOREIGN_ASSETS))
         DISPLAY_ITEM(IDX_FOREIGN_ASSET, application->num_foreign_assets, tx_num_items)
     }
 

@@ -192,7 +192,8 @@ static parser_error_t parser_printBoxes(char *outKey, uint16_t outKeyLen, char *
     return parser_ok;
 }
 
-static int simpleAccessListElementToString(access_list_element *element, char *output, uint16_t outputLen, bool appendPlusSign)
+static int simpleAccessListElementToString(access_list_element *element, char *output, uint16_t outputLen,
+                                           bool appendPlusSign)
 {
     if (element == NULL || output == NULL) {
         return -1;
@@ -228,9 +229,9 @@ static int simpleAccessListElementToString(access_list_element *element, char *o
     return len;
 }
 
-static parser_error_t parser_printAccessList(parser_context_t *c, char *outKey, uint16_t outKeyLen, char *outVal, uint16_t outValLen,
-                                                     uint8_t displayIdx, uint8_t pageIdx, uint8_t *pageCount,
-                                                     txn_application *application)
+static parser_error_t parser_printAccessList(parser_context_t *c, char *outKey, uint16_t outKeyLen, char *outVal,
+                                             uint16_t outValLen, uint8_t displayIdx, uint8_t pageIdx,
+                                             uint8_t *pageCount, txn_application *application)
 {
     if (outKey == NULL || outVal == NULL || application == NULL) {
         return parser_unexpected_error;
@@ -248,7 +249,7 @@ static parser_error_t parser_printAccessList(parser_context_t *c, char *outKey, 
     // Use _getAccessListElement to retrieve the element from the transaction buffer
     CHECK_ERROR(_getAccessListElement(c, &element, tmpIdx, application->num_access_list_element));
     
-    char buff[87] = {0}; // Public key + plus sign + uint64_t + null terminator = 65 + 1 + 20 + 1 = 87
+    char buff[87] = {0};  // Public key + plus sign + uint64_t + null terminator = 65 + 1 + 20 + 1 = 87
     int8_t temp_offset = 0;
     // This is used to store a simple element that is referenced inside a complex element
     access_list_element sub_element = {0};
@@ -299,26 +300,30 @@ static parser_error_t parser_printAccessList(parser_context_t *c, char *outKey, 
         snprintf(outKey, outKeyLen, "Access Holding");
         if (element.holding.s > 0) {
             // Index is 1-based, subtract 1 for access list lookup
-            CHECK_ERROR(_getAccessListElement(c, &sub_element, element.holding.s - 1, application->num_access_list_element));
-            temp_offset = simpleAccessListElementToString(&sub_element, buff+temp_offset, sizeof(buff)-temp_offset, element.holding.d >= 0);
+            CHECK_ERROR(
+                _getAccessListElement(c, &sub_element, element.holding.s - 1, application->num_access_list_element));
+            temp_offset = simpleAccessListElementToString(&sub_element, buff + temp_offset, sizeof(buff) - temp_offset,
+                                                          element.holding.d >= 0);
             if (temp_offset == -1) {
                 return parser_unexpected_error;
             }
         }
         if (element.holding.d >= 0) {
-            if(element.holding.d != 0){
+            if (element.holding.d != 0) {
                 // Index is 1-based, subtract 1 for access list lookup
-                CHECK_ERROR(_getAccessListElement(c, &sub_element, element.holding.d - 1, application->num_access_list_element));
+                CHECK_ERROR(_getAccessListElement(c, &sub_element, element.holding.d - 1,
+                                                  application->num_access_list_element));
             } else {
                 // Index 0 means use the sender address
                 sub_element.type = ACCESS_LIST_ADDRESS;
-                if(sizeof(c->parser_tx_obj->sender) > sizeof(sub_element.address)) {
+                if (sizeof(c->parser_tx_obj->sender) > sizeof(sub_element.address)) {
                     return parser_unexpected_buffer_end;
                 }
                 memcpy(sub_element.address, c->parser_tx_obj->sender, sizeof(c->parser_tx_obj->sender));
             }
 
-            temp_offset = simpleAccessListElementToString(&sub_element, buff+temp_offset, sizeof(buff)-temp_offset, false);
+            temp_offset =
+                simpleAccessListElementToString(&sub_element, buff + temp_offset, sizeof(buff) - temp_offset, false);
             if (temp_offset == -1) {
                 return parser_unexpected_error;
             }
@@ -330,34 +335,38 @@ static parser_error_t parser_printAccessList(parser_context_t *c, char *outKey, 
         temp_offset = 0;
         snprintf(outKey, outKeyLen, "Access Local");
         if (element.local.p >= 0) {
-            if (element.local.p != 0){
+            if (element.local.p != 0) {
                 // Index is 1-based, subtract 1 for access list lookup
-                CHECK_ERROR(_getAccessListElement(c, &sub_element, element.local.p - 1, application->num_access_list_element));
+                CHECK_ERROR(
+                    _getAccessListElement(c, &sub_element, element.local.p - 1, application->num_access_list_element));
             } else {
                 // Index 0 means use the current application ID
                 sub_element.type = ACCESS_LIST_APP;
                 sub_element.app = c->parser_tx_obj->application.id;
             }
-            temp_offset = simpleAccessListElementToString(&sub_element, buff+temp_offset, sizeof(buff)-temp_offset, element.local.d >= 0);
+            temp_offset = simpleAccessListElementToString(&sub_element, buff + temp_offset, sizeof(buff) - temp_offset,
+                                                          element.local.d >= 0);
             if (temp_offset == -1) {
                 return parser_unexpected_error;
             }
         }
 
         if (element.local.d >= 0) {
-            if(element.local.d != 0){
+            if (element.local.d != 0) {
                 // Index is 1-based, subtract 1 for access list lookup
-                CHECK_ERROR(_getAccessListElement(c, &sub_element, element.local.d - 1, application->num_access_list_element));
+                CHECK_ERROR(
+                    _getAccessListElement(c, &sub_element, element.local.d - 1, application->num_access_list_element));
             } else {
                 // Index 0 means use the sender address
                 sub_element.type = ACCESS_LIST_ADDRESS;
-                if(sizeof(c->parser_tx_obj->sender) > sizeof(sub_element.address)) {
+                if (sizeof(c->parser_tx_obj->sender) > sizeof(sub_element.address)) {
                     return parser_unexpected_buffer_end;
                 }
                 memcpy(sub_element.address, c->parser_tx_obj->sender, sizeof(c->parser_tx_obj->sender));
             }
 
-            temp_offset = simpleAccessListElementToString(&sub_element, buff+temp_offset, sizeof(buff)-temp_offset, false);
+            temp_offset =
+                simpleAccessListElementToString(&sub_element, buff + temp_offset, sizeof(buff) - temp_offset, false);
             if (temp_offset == -1) {
                 return parser_unexpected_error;
             }
@@ -378,6 +387,9 @@ static parser_error_t parser_printAccessList(parser_context_t *c, char *outKey, 
 
 static parser_error_t parser_printCommonParams(const parser_tx_t *parser_tx_obj, uint8_t displayIdx, char *outKey,
                                                uint16_t outKeyLen, char *outVal, uint16_t outValLen, uint8_t pageIdx,
+                                                                         uint8_t displayIdx, char *outKey,
+                                                                         uint16_t outKeyLen, char *outVal,
+                                                                         uint16_t outValLen, uint8_t pageIdx,
                                                uint8_t *pageCount)
 {
     *pageCount = 1;
@@ -668,9 +680,11 @@ static parser_error_t parser_printTxAssetFreeze(const txn_asset_freeze *asset_fr
     return parser_display_idx_out_of_range;
 }
 
-static parser_error_t parser_printTxAssetConfig(const txn_asset_config *asset_config, uint8_t displayIdx, char *outKey,
-                                                uint16_t outKeyLen, char *outVal, uint16_t outValLen, uint8_t pageIdx,
-                                                uint8_t *pageCount)
+static parser_error_t parser_printTxAssetConfig(const txn_asset_config *asset_config,
+                                                                          uint8_t displayIdx, char *outKey,
+                                                                          uint16_t outKeyLen, char *outVal,
+                                                                          uint16_t outValLen, uint8_t pageIdx,
+                                                                          uint8_t *pageCount)
 {
     *pageCount = 1;
     char buff[100] = {0};

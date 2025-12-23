@@ -167,7 +167,6 @@ typedef struct {
 
 #define MAX_ACCESS_LIST_ELEMENTS 16
 
-
 #define MAX_APPROV_LEN 128
 #define MAX_CLEAR_LEN  32
 
