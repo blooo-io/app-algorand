@@ -1006,20 +1006,6 @@ parser_error_t _verifyAccessList(parser_context_t *c, uint8_t *num_al_elements, 
 }
 
 
-parser_error_t _readAccessList(parser_context_t *c, access_list_element elements[], uint8_t *num_elements)
-{
-    // get array size
-    CHECK_ERROR(_readArraySize(c, num_elements))
-    if (*num_elements > MAX_ACCESS_LIST_ELEMENTS) {
-        return parser_msgpack_array_too_big;
-    }
-    // loop from 0 to array size
-    for (size_t i = 0; i < *num_elements; i++) {
-        CHECK_ERROR(_readAccessListElement(c, &elements[i]));
-    }
-    return parser_ok;
-}
-
 static parser_error_t _readTxType(parser_context_t *c, parser_tx_t *v)
 {
     char typeStr[10] = {0};

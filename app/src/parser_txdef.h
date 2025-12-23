@@ -254,13 +254,10 @@ typedef struct {
     const uint8_t *cprog;
     uint16_t app_args_len[MAX_ARG];
 
-    union {
-        struct {
-            uint64_t foreign_apps[MAX_FOREIGN_APPS];
-            uint64_t foreign_assets[MAX_FOREIGN_ASSETS];
-            box boxes[MAX_FOREIGN_APPS];
-        };
-    };
+    uint64_t foreign_apps[MAX_FOREIGN_APPS];
+    uint64_t foreign_assets[MAX_FOREIGN_ASSETS];
+    box boxes[MAX_FOREIGN_APPS];
+
     uint8_t num_access_list_element;
     uint8_t access_list_display_offset;  // Display position offset for access_list items
 
