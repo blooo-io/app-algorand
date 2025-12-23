@@ -469,56 +469,8 @@ txAlMixedWithBoxAndLocals = {
     "type": "appl",
 }
 
-# Maximum valid: exactly 7 elements (mix of all types including empty) for Nano X
-txAlMaxElementsNanoX = {
-    "al": [
-        # 1. Application ID
-        {"p": 1042},
-        # 2. Address
-        {
-            "d": address_to_public_key(
-                "BOBBYB3QD5QGQ27EBYHHUT7J76EWXKFOSF2NNYYYI6EOAQ5D3M2YW2UGEA"
-            )
-        },
-        # 3. Asset ID
-        {"s": 1010},
-        # 4. Holding resource
-        {
-            "h": {
-                "d": 2,  # 1-based Index to Address resource
-                "s": 3,  # 1-based Index to Asset resource
-            }
-        },
-        # 5. Locals resource
-        {
-            "l": {
-                "d": 2,  # 1-based Index to Address resource
-                "p": 1,  # 1-based Index to Application resource
-            }
-        },
-        # 6. Box resource
-        {
-            "b": {
-                "i": 1,  # 1-based Index to Application resource
-                "n": base64.b64decode("Ym94TmFtZQ=="),  # boxName
-            }
-        },
-        # 7. Another asset
-        {"s": 2020},
-    ],
-    "apid": 1005,
-    "fee": 1000,
-    "fv": 931,
-    "gh": base64.b64decode("t9fO3Zr2fsmd8Dg+0HkTKwX9dkf73CViBarLDH2hLtw="),
-    "lv": 1931,
-    "snd": address_to_public_key(
-        "ALICE7Y2JOFGG2VGUC64VINB75PI56O6M2XW233KG2I3AIYJFUD4QMYTJM"
-    ),
-    "type": "appl",
-}
-
-# Maximum valid: exactly 16 elements (mix of all types including empty) for other devices
-txAlMaxElementsOtherDevices = {
+# Maximum valid: exactly 16 elements (mix of all types including empty)
+txAlMaxElements = {
     "al": [
         # 1. Application ID
         {"p": 1042},
