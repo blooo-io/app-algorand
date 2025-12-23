@@ -700,7 +700,7 @@ static parser_error_t parser_printTxApplication(parser_context_t *ctx, uint8_t d
                 return parser_unexpected_error;
             }
         } else {
-            snprintf(outVal, outValLen, "Not set");
+            return parser_unexpected_value;
         }
         return parser_ok;
 
