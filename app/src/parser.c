@@ -199,23 +199,23 @@ static int simpleAccessListElementToString(access_list_element *element, char *o
         return -1;
     }
     switch (element->type) {
-        case ACCESS_LIST_ASSET:
-            if (uint64_to_str(output, outputLen, element->asset) != NULL) {
-                return -1;
-            }
-            break;
-        case ACCESS_LIST_ADDRESS:
-            if (encodePubKey((uint8_t *)output, outputLen, element->address) == 0) {
-                return -1;
-            }
-            break;
-        case ACCESS_LIST_APP:
-            if (uint64_to_str(output, outputLen, element->app) != NULL) {
-                return -1;
-            }
-            break;
-        default:
+    case ACCESS_LIST_ASSET:
+        if (uint64_to_str(output, outputLen, element->asset) != NULL) {
             return -1;
+        }
+        break;
+    case ACCESS_LIST_ADDRESS:
+        if (encodePubKey((uint8_t *)output, outputLen, element->address) == 0) {
+            return -1;
+        }
+        break;
+    case ACCESS_LIST_APP:
+        if (uint64_to_str(output, outputLen, element->app) != NULL) {
+            return -1;
+        }
+        break;
+    default:
+        return -1;
     }
     size_t len = strlen(output);
     if (appendPlusSign) {
@@ -245,10 +245,10 @@ static parser_error_t parser_printAccessList(parser_context_t *c, char *outKey, 
 
     *pageCount = 1;
     access_list_element element = {0};
-    
+
     // Use _getAccessListElement to retrieve the element from the transaction buffer
     CHECK_ERROR(_getAccessListElement(c, &element, tmpIdx, application->num_access_list_element));
-    
+
     char buff[87] = {0};  // Public key + plus sign + uint64_t + null terminator = 65 + 1 + 20 + 1 = 87
     int8_t temp_offset = 0;
     // This is used to store a simple element that is referenced inside a complex element
@@ -387,9 +387,6 @@ static parser_error_t parser_printAccessList(parser_context_t *c, char *outKey, 
 
 static parser_error_t parser_printCommonParams(const parser_tx_t *parser_tx_obj, uint8_t displayIdx, char *outKey,
                                                uint16_t outKeyLen, char *outVal, uint16_t outValLen, uint8_t pageIdx,
-                                                                         uint8_t displayIdx, char *outKey,
-                                                                         uint16_t outKeyLen, char *outVal,
-                                                                         uint16_t outValLen, uint8_t pageIdx,
                                                uint8_t *pageCount)
 {
     *pageCount = 1;
@@ -680,11 +677,9 @@ static parser_error_t parser_printTxAssetFreeze(const txn_asset_freeze *asset_fr
     return parser_display_idx_out_of_range;
 }
 
-static parser_error_t parser_printTxAssetConfig(const txn_asset_config *asset_config,
-                                                                          uint8_t displayIdx, char *outKey,
-                                                                          uint16_t outKeyLen, char *outVal,
-                                                                          uint16_t outValLen, uint8_t pageIdx,
-                                                                          uint8_t *pageCount)
+static parser_error_t parser_printTxAssetConfig(const txn_asset_config *asset_config, uint8_t displayIdx, char *outKey,
+                                                uint16_t outKeyLen, char *outVal, uint16_t outValLen, uint8_t pageIdx,
+                                                uint8_t *pageCount)
 {
     *pageCount = 1;
     char buff[100] = {0};
@@ -789,7 +784,7 @@ static parser_error_t parser_printTxApplication(parser_context_t *ctx, uint8_t d
 
     case IDX_ACCESS_LIST:
         return parser_printAccessList(ctx, outKey, outKeyLen, outVal, outValLen, displayIdx, pageIdx, pageCount,
-                                              application);
+                                      application);
 
     case IDX_REJECT_VERSION:
         snprintf(outKey, outKeyLen, "Reject version");
