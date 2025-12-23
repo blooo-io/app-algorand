@@ -298,16 +298,26 @@ static parser_error_t parser_printAccessList(parser_context_t *c, char *outKey, 
         temp_offset = 0;
         snprintf(outKey, outKeyLen, "Access Holding");
         if (element.holding.s > 0) {
-            // Since the index we will receive is 1-based, we need to subtract 1
+            // Index is 1-based, subtract 1 for access list lookup
             CHECK_ERROR(_getAccessListElement(c, &sub_element, element.holding.s - 1, application->num_access_list_element));
-            temp_offset = simpleAccessListElementToString(&sub_element, buff+temp_offset, sizeof(buff)-temp_offset, element.holding.d > 0);
+            temp_offset = simpleAccessListElementToString(&sub_element, buff+temp_offset, sizeof(buff)-temp_offset, element.holding.d >= 0);
             if (temp_offset == -1) {
                 return parser_unexpected_error;
             }
         }
-        if (element.holding.d > 0) {
-            // Since the index we will receive is 1-based, we need to subtract 1
-            CHECK_ERROR(_getAccessListElement(c, &sub_element, element.holding.d - 1, application->num_access_list_element));
+        if (element.holding.d >= 0) {
+            if(element.holding.d != 0){
+                // Index is 1-based, subtract 1 for access list lookup
+                CHECK_ERROR(_getAccessListElement(c, &sub_element, element.holding.d - 1, application->num_access_list_element));
+            } else {
+                // Index 0 means use the sender address
+                sub_element.type = ACCESS_LIST_ADDRESS;
+                if(sizeof(c->parser_tx_obj->sender) > sizeof(sub_element.address)) {
+                    return parser_unexpected_buffer_end;
+                }
+                memcpy(sub_element.address, c->parser_tx_obj->sender, sizeof(c->parser_tx_obj->sender));
+            }
+
             temp_offset = simpleAccessListElementToString(&sub_element, buff+temp_offset, sizeof(buff)-temp_offset, false);
             if (temp_offset == -1) {
                 return parser_unexpected_error;
@@ -319,18 +329,35 @@ static parser_error_t parser_printAccessList(parser_context_t *c, char *outKey, 
     case ACCESS_LIST_LOCAL:
         temp_offset = 0;
         snprintf(outKey, outKeyLen, "Access Local");
-        if (element.local.p > 0) {
-            // Since the index we will receive is 1-based, we need to subtract 1
-            CHECK_ERROR(_getAccessListElement(c, &sub_element, element.local.p - 1, application->num_access_list_element));
-            temp_offset = simpleAccessListElementToString(&sub_element, buff+temp_offset, sizeof(buff)-temp_offset, element.local.d > 0);
+        if (element.local.p >= 0) {
+            if (element.local.p != 0){
+                // Index is 1-based, subtract 1 for access list lookup
+                CHECK_ERROR(_getAccessListElement(c, &sub_element, element.local.p - 1, application->num_access_list_element));
+            } else {
+                // Index 0 means use the current application ID
+                sub_element.type = ACCESS_LIST_APP;
+                sub_element.app = c->parser_tx_obj->application.id;
+            }
+            temp_offset = simpleAccessListElementToString(&sub_element, buff+temp_offset, sizeof(buff)-temp_offset, element.local.d >= 0);
             if (temp_offset == -1) {
                 return parser_unexpected_error;
             }
         }
-        if (element.local.d > 0) {
-            // Since the index we will receive is 1-based, we need to subtract 1
-            CHECK_ERROR(_getAccessListElement(c, &sub_element, element.local.d - 1, application->num_access_list_element));
-            temp_offset = simpleAccessListElementToString(&sub_element, buff+temp_offset, sizeof(buff)-temp_offset, element.local.p > 0);
+
+        if (element.local.d >= 0) {
+            if(element.local.d != 0){
+                // Index is 1-based, subtract 1 for access list lookup
+                CHECK_ERROR(_getAccessListElement(c, &sub_element, element.local.d - 1, application->num_access_list_element));
+            } else {
+                // Index 0 means use the sender address
+                sub_element.type = ACCESS_LIST_ADDRESS;
+                if(sizeof(c->parser_tx_obj->sender) > sizeof(sub_element.address)) {
+                    return parser_unexpected_buffer_end;
+                }
+                memcpy(sub_element.address, c->parser_tx_obj->sender, sizeof(c->parser_tx_obj->sender));
+            }
+
+            temp_offset = simpleAccessListElementToString(&sub_element, buff+temp_offset, sizeof(buff)-temp_offset, false);
             if (temp_offset == -1) {
                 return parser_unexpected_error;
             }
