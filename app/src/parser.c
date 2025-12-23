@@ -228,7 +228,7 @@ static int simpleAccessListElementToString(access_list_element *element, char *o
     return len;
 }
 
-static parser_error_t parser_printAccessListElements(parser_context_t *c, char *outKey, uint16_t outKeyLen, char *outVal, uint16_t outValLen,
+static parser_error_t parser_printAccessList(parser_context_t *c, char *outKey, uint16_t outKeyLen, char *outVal, uint16_t outValLen,
                                                      uint8_t displayIdx, uint8_t pageIdx, uint8_t *pageCount,
                                                      txn_application *application)
 {
@@ -747,7 +747,7 @@ static parser_error_t parser_printTxApplication(parser_context_t *ctx, uint8_t d
         return parser_ok;
 
     case IDX_ACCESS_LIST:
-        return parser_printAccessListElements(ctx, outKey, outKeyLen, outVal, outValLen, displayIdx, pageIdx, pageCount,
+        return parser_printAccessList(ctx, outKey, outKeyLen, outVal, outValLen, displayIdx, pageIdx, pageCount,
                                               application);
 
     case IDX_REJECT_VERSION:

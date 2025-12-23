@@ -979,17 +979,17 @@ parser_error_t _readAccessListSize(parser_context_t *c, uint8_t *numAccessListEl
     return parser_ok;
 }
 
-parser_error_t _getAccessListElement(parser_context_t *c, access_list_element *accessListElement, uint8_t accessListElement_idx, uint8_t num_accessListElements){
+parser_error_t _getAccessListElement(parser_context_t *c, access_list_element *out_element, uint8_t in_element_idx, uint8_t in_total_elements){
 
     uint8_t tmp_num_access_list_elements = 0;
     CHECK_ERROR(_findKey(c, KEY_APP_ACCESS_LIST))
-    CHECK_ERROR(_readAccessListSize(c, &tmp_num_access_list_elements, num_accessListElements))
-    if (tmp_num_access_list_elements != num_accessListElements || accessListElement_idx >= num_accessListElements) {
+    CHECK_ERROR(_readAccessListSize(c, &tmp_num_access_list_elements, in_total_elements))
+    if (tmp_num_access_list_elements != in_total_elements || in_element_idx >= in_total_elements) {
         return parser_unexpected_number_items;
     }
     // Read until we get the right access list element index
-    for (uint8_t i = 0; i < accessListElement_idx + 1; i++) {
-        CHECK_ERROR(_readAccessListElement(c, accessListElement))
+    for (uint8_t i = 0; i < in_element_idx + 1; i++) {
+        CHECK_ERROR(_readAccessListElement(c, out_element))
     }
     return parser_ok;
 }
