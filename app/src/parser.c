@@ -468,9 +468,10 @@ static parser_error_t parser_printCommonParams(const parser_tx_t *parser_tx_obj,
     return parser_display_idx_out_of_range;
 }
 
-static parser_error_t parser_printTxPayment(const txn_payment *payment, uint8_t displayIdx, char *outKey,
-                                            uint16_t outKeyLen, char *outVal, uint16_t outValLen, uint8_t pageIdx,
-                                            uint8_t *pageCount)
+__attribute__((noinline)) static parser_error_t parser_printTxPayment(const txn_payment *payment, uint8_t displayIdx,
+                                                                      char *outKey, uint16_t outKeyLen, char *outVal,
+                                                                      uint16_t outValLen, uint8_t pageIdx,
+                                                                      uint8_t *pageCount)
 {
     *pageCount = 1;
     char buff[65] = {0};
@@ -505,9 +506,10 @@ static parser_error_t parser_printTxPayment(const txn_payment *payment, uint8_t 
     return parser_display_idx_out_of_range;
 }
 
-static parser_error_t parser_printTxKeyreg(const txn_keyreg *keyreg, uint8_t displayIdx, char *outKey,
-                                           uint16_t outKeyLen, char *outVal, uint16_t outValLen, uint8_t pageIdx,
-                                           uint8_t *pageCount)
+__attribute__((noinline)) static parser_error_t parser_printTxKeyreg(const txn_keyreg *keyreg, uint8_t displayIdx,
+                                                                     char *outKey, uint16_t outKeyLen, char *outVal,
+                                                                     uint16_t outValLen, uint8_t pageIdx,
+                                                                     uint8_t *pageCount)
 {
     *pageCount = 1;
     char buff[45];
@@ -569,9 +571,11 @@ static parser_error_t parser_printTxKeyreg(const txn_keyreg *keyreg, uint8_t dis
     return parser_display_idx_out_of_range;
 }
 
-static parser_error_t parser_printTxAssetXfer(const txn_asset_xfer *asset_xfer, uint8_t displayIdx, char *outKey,
-                                              uint16_t outKeyLen, char *outVal, uint16_t outValLen, uint8_t pageIdx,
-                                              uint8_t *pageCount)
+__attribute__((noinline)) static parser_error_t parser_printTxAssetXfer(const txn_asset_xfer *asset_xfer,
+                                                                        uint8_t displayIdx, char *outKey,
+                                                                        uint16_t outKeyLen, char *outVal,
+                                                                        uint16_t outValLen, uint8_t pageIdx,
+                                                                        uint8_t *pageCount)
 {
     *pageCount = 1;
     union {
@@ -638,9 +642,11 @@ static parser_error_t parser_printTxAssetXfer(const txn_asset_xfer *asset_xfer, 
     return parser_display_idx_out_of_range;
 }
 
-static parser_error_t parser_printTxAssetFreeze(const txn_asset_freeze *asset_freeze, uint8_t displayIdx, char *outKey,
-                                                uint16_t outKeyLen, char *outVal, uint16_t outValLen, uint8_t pageIdx,
-                                                uint8_t *pageCount)
+__attribute__((noinline)) static parser_error_t parser_printTxAssetFreeze(const txn_asset_freeze *asset_freeze,
+                                                                          uint8_t displayIdx, char *outKey,
+                                                                          uint16_t outKeyLen, char *outVal,
+                                                                          uint16_t outValLen, uint8_t pageIdx,
+                                                                          uint8_t *pageCount)
 {
     *pageCount = 1;
     char buff[65] = {0};
@@ -677,9 +683,12 @@ static parser_error_t parser_printTxAssetFreeze(const txn_asset_freeze *asset_fr
     return parser_display_idx_out_of_range;
 }
 
-static parser_error_t parser_printTxAssetConfig(const txn_asset_config *asset_config, uint8_t displayIdx, char *outKey,
-                                                uint16_t outKeyLen, char *outVal, uint16_t outValLen, uint8_t pageIdx,
-                                                uint8_t *pageCount)
+// noinline attribute prevents compiler from inlining, reducing stack accumulation on NanoX
+__attribute__((noinline)) static parser_error_t parser_printTxAssetConfig(const txn_asset_config *asset_config,
+                                                                          uint8_t displayIdx, char *outKey,
+                                                                          uint16_t outKeyLen, char *outVal,
+                                                                          uint16_t outValLen, uint8_t pageIdx,
+                                                                          uint8_t *pageCount)
 {
     *pageCount = 1;
     char buff[100] = {0};
@@ -766,9 +775,11 @@ static parser_error_t parser_printTxAssetConfig(const txn_asset_config *asset_co
     return parser_display_idx_out_of_range;
 }
 
-static parser_error_t parser_printTxApplication(parser_context_t *ctx, uint8_t displayIdx,
-                                                txn_application_index_e itemType, char *outKey, uint16_t outKeyLen,
-                                                char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount)
+__attribute__((noinline)) static parser_error_t parser_printTxApplication(parser_context_t *ctx, uint8_t displayIdx,
+                                                                          txn_application_index_e itemType,
+                                                                          char *outKey, uint16_t outKeyLen,
+                                                                          char *outVal, uint16_t outValLen,
+                                                                          uint8_t pageIdx, uint8_t *pageCount)
 {
     *pageCount = 1;
     char buff[65] = {0};
