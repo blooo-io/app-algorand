@@ -827,6 +827,10 @@ __Z_INLINE parser_error_t _readBoxElement(parser_context_t *c, box *box)
     uint8_t key[2] = {0};
     uint16_t mapSize = 0;
     CHECK_ERROR(_readMapSize(c, &mapSize))
+    if (mapSize > 2) {
+        PRINTF("Box map size should be at most 2 but got %d\n", mapSize);
+        return parser_msgpack_array_too_big;
+    }
 
     box->i = 0;
     box->n_len = 0;
@@ -869,17 +873,23 @@ __Z_INLINE parser_error_t _readHoldingElement(parser_context_t *c, holding *hold
     uint8_t key[2] = {0};
     uint16_t mapSize = 0;
     CHECK_ERROR(_readMapSize(c, &mapSize))
+    if (mapSize > 2) {
+        PRINTF("Holding map size should be at most 2 but got %d\n", mapSize);
+        return parser_msgpack_array_too_big;
+    }
     holding->d = 0;
     holding->s = 0;
 
     for (uint16_t index = 0; index < mapSize; index++) {
         CHECK_ERROR(_readString(c, key, sizeof(key)))
-        if (strncmp((char *)key, KEY_APP_ADDRESS, sizeof(KEY_APP_ADDRESS)) == 0) {
+        switch (key[0]) {
+        case KEY_APP_ADDRESS[0]:  // 'd'
             CHECK_ERROR(_readUInt8(c, &holding->d));
-
-        } else if (strncmp((char *)key, KEY_APP_ASSET, sizeof(KEY_APP_ASSET)) == 0) {
+            break;
+        case KEY_APP_ASSET[0]:  // 's'
             CHECK_ERROR(_readUInt8(c, &holding->s));
-        } else {
+            break;
+        default:
             return parser_unexpected_error;
         }
     }
@@ -892,17 +902,23 @@ __Z_INLINE parser_error_t _readLocalElement(parser_context_t *c, local *local)
     uint8_t key[2] = {0};
     uint16_t mapSize = 0;
     CHECK_ERROR(_readMapSize(c, &mapSize))
+    if (mapSize > 2) {
+        PRINTF("Local map size should be at most 2 but got %d\n", mapSize);
+        return parser_msgpack_array_too_big;
+    }
     local->d = 0;
     local->p = 0;
 
     for (uint16_t index = 0; index < mapSize; index++) {
         CHECK_ERROR(_readString(c, key, sizeof(key)))
-        if (strncmp((char *)key, KEY_APP_ADDRESS, sizeof(KEY_APP_ADDRESS)) == 0) {
+        switch (key[0]) {
+        case KEY_APP_ADDRESS[0]:  // 'd'
             CHECK_ERROR(_readUInt8(c, &local->d));
-
-        } else if (strncmp((char *)key, KEY_APP_APP, sizeof(KEY_APP_APP)) == 0) {
+            break;
+        case KEY_APP_APP[0]:  // 'p'
             CHECK_ERROR(_readUInt8(c, &local->p));
-        } else {
+            break;
+        default:
             return parser_unexpected_error;
         }
     }
@@ -923,40 +939,68 @@ __Z_INLINE parser_error_t _readAccessListElement(parser_context_t *c, access_lis
     CHECK_ERROR(_readString(c, key, sizeof(key)));
     // check if the string match a key
     // figure key: (s|d|p|b|h|l)
-    if (key[0] == 's') {
+    switch (key[0]) {
+    case KEY_APP_ASSET[0]:  // 's'
         element->type = ACCESS_LIST_ASSET;
         CHECK_ERROR(_readInteger(c, &element->asset));
-
-    } else if (key[0] == 'd') {
+        break;
+    case KEY_APP_ADDRESS[0]:  // 'd'
         element->type = ACCESS_LIST_ADDRESS;
         CHECK_ERROR(_readBinFixed(c, element->address, 32));
-    } else if (key[0] == 'p') {
+        break;
+    case KEY_APP_APP[0]:  // 'p'
         element->type = ACCESS_LIST_APP;
         CHECK_ERROR(_readInteger(c, &element->app));
-    } else if (key[0] == 'b') {
+        break;
+    case KEY_APP_BOX[0]:  // 'b'
         element->type = ACCESS_LIST_BOX;
         CHECK_ERROR(_readBoxElement(c, &element->box));
-    } else if (key[0] == 'h') {
+        break;
+    case KEY_APP_HOLDING[0]:  // 'h'
         element->type = ACCESS_LIST_HOLDING;
         CHECK_ERROR(_readHoldingElement(c, &element->holding));
-
-    } else if (key[0] == 'l') {
+        break;
+    case KEY_APP_LOCAL[0]:  // 'l'
         element->type = ACCESS_LIST_LOCAL;
         CHECK_ERROR(_readLocalElement(c, &element->local));
+        break;
+    default:
+        return parser_unexpected_error;
     }
     return parser_ok;
 }
 
-parser_error_t _readAccessList(parser_context_t *c, access_list_element elements[], uint8_t *num_elements)
+parser_error_t _readAccessListSize(parser_context_t *c, uint8_t *numAccessListElements, uint8_t maxAccessListElements)
 {
-    // get array size
-    CHECK_ERROR(_readArraySize(c, num_elements))
-    if (*num_elements > MAX_ACCESS_LIST_ELEMENTS) {
+    CHECK_ERROR(_readArraySize(c, numAccessListElements))
+    if (*numAccessListElements > maxAccessListElements) {
         return parser_msgpack_array_too_big;
     }
-    // loop from 0 to array size
-    for (size_t i = 0; i < *num_elements; i++) {
-        CHECK_ERROR(_readAccessListElement(c, &elements[i]));
+    return parser_ok;
+}
+
+parser_error_t _getAccessListElement(parser_context_t *c, access_list_element *out_element, uint8_t in_element_idx,
+                                     uint8_t in_total_elements)
+{
+    uint8_t tmp_num_access_list_elements = 0;
+    CHECK_ERROR(_findKey(c, KEY_APP_ACCESS_LIST))
+    CHECK_ERROR(_readAccessListSize(c, &tmp_num_access_list_elements, in_total_elements))
+    if (tmp_num_access_list_elements != in_total_elements || in_element_idx >= in_total_elements) {
+        return parser_unexpected_number_items;
+    }
+    // Read until we get the right access list element index
+    for (uint8_t i = 0; i < in_element_idx + 1; i++) {
+        CHECK_ERROR(_readAccessListElement(c, out_element))
+    }
+    return parser_ok;
+}
+
+parser_error_t _verifyAccessList(parser_context_t *c, uint8_t *num_al_elements, uint8_t maxNumAccessListElement)
+{
+    access_list_element tmpElement = {0};
+    CHECK_ERROR(_readAccessListSize(c, num_al_elements, maxNumAccessListElement))
+    for (uint8_t i = 0; i < *num_al_elements; i++) {
+        CHECK_ERROR(_readAccessListElement(c, &tmpElement))
     }
     return parser_ok;
 }
@@ -1273,40 +1317,42 @@ static parser_error_t _readTxApplication(parser_context_t *c, parser_tx_t *v)
     application->reject_version = 0;
     application->num_access_list_element = 0;
     application->access_list_display_offset = 0;
-    explicit_bzero(application->access_list, sizeof(application->access_list));
 
     if (_findKey(c, KEY_APP_ID) == parser_ok) {
         CHECK_ERROR(_readInteger(c, &application->id))
     }
     DISPLAY_ITEM(IDX_APP_ID, 1, tx_num_items)
 
-    if (_findKey(c, KEY_APP_REJECT_VERSION) == parser_ok) {
-        CHECK_ERROR(_readInteger(c, &application->reject_version))
-    }
-
-    if (_findKey(c, KEY_APP_ACCESS_LIST) == parser_ok) {
-        CHECK_ERROR(_readAccessList(c, application->access_list, &application->num_access_list_element))
-    }
-
     if (_findKey(c, KEY_APP_ONCOMPLETION) == parser_ok) {
         CHECK_ERROR(_readInteger(c, &application->oncompletion))
     }
     DISPLAY_ITEM(IDX_ON_COMPLETION, 1, tx_num_items)
 
+    if (_findKey(c, KEY_APP_REJECT_VERSION) == parser_ok) {
+        CHECK_ERROR(_readInteger(c, &application->reject_version))
+        if (application->reject_version > 0) {
+            DISPLAY_ITEM(IDX_REJECT_VERSION, 1, tx_num_items)
+        }
+    }
+
+    if (_findKey(c, KEY_APP_ACCESS_LIST) == parser_ok) {
+        CHECK_ERROR(_verifyAccessList(c, &application->num_access_list_element, MAX_ACCESS_LIST_ELEMENTS))
+        application->access_list_display_offset = tx_num_items;
+        DISPLAY_ITEM(IDX_ACCESS_LIST, application->num_access_list_element, tx_num_items)
+    }
+
     if (_findKey(c, KEY_APP_BOXES) == parser_ok) {
-        CHECK_ERROR(_readBoxes(c, application->foreign.boxes, &application->num_boxes))
+        CHECK_ERROR(_readBoxes(c, application->boxes, &application->num_boxes))
         DISPLAY_ITEM(IDX_BOXES, application->num_boxes, tx_num_items)
     }
 
     if (_findKey(c, KEY_APP_FOREIGN_APPS) == parser_ok) {
-        CHECK_ERROR(
-            _readArrayU64(c, application->foreign.foreign_apps, &application->num_foreign_apps, MAX_FOREIGN_APPS))
+        CHECK_ERROR(_readArrayU64(c, application->foreign_apps, &application->num_foreign_apps, MAX_FOREIGN_APPS))
         DISPLAY_ITEM(IDX_FOREIGN_APP, application->num_foreign_apps, tx_num_items)
     }
 
     if (_findKey(c, KEY_APP_FOREIGN_ASSETS) == parser_ok) {
-        CHECK_ERROR(
-            _readArrayU64(c, application->foreign.foreign_assets, &application->num_foreign_assets, MAX_FOREIGN_ASSETS))
+        CHECK_ERROR(_readArrayU64(c, application->foreign_assets, &application->num_foreign_assets, MAX_FOREIGN_ASSETS))
         DISPLAY_ITEM(IDX_FOREIGN_ASSET, application->num_foreign_assets, tx_num_items)
     }
 
@@ -1365,17 +1411,6 @@ static parser_error_t _readTxApplication(parser_context_t *c, parser_tx_t *v)
         application->cprog_len + application->aprog_len > PAGE_LEN * (1 + application->extra_pages)) {
         // ExtraPages needs to be checked only on application creation
         return parser_program_fields_too_long;
-    }
-
-    // Display reject_version and access_list at the end (matching enum order)
-    if (application->reject_version > 0) {
-        DISPLAY_ITEM(IDX_REJECT_VERSION, 1, tx_num_items)
-    }
-
-    // Store the display offset before adding access_list items
-    application->access_list_display_offset = tx_num_items;
-    if (application->num_access_list_element > 0) {
-        DISPLAY_ITEM(IDX_ACCESS_LIST, application->num_access_list_element, tx_num_items)
     }
 
     return parser_ok;

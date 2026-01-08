@@ -32,8 +32,7 @@ from .data import (
     txAlEmptyBoxRef,
     txAlMixedResources,
     txAlMixedWithBoxAndLocals,
-    txAlMaxElementsNanoX,
-    txAlMaxElementsOtherDevices,
+    txAlMaxElements,
     txAlOverMaxElements,
     txAlMultipleAssets,
     txAlMultipleApplications,
@@ -604,14 +603,7 @@ def test_sign_al_max_elements_tx(
     test_name: str,
     default_screenshot_path: str,
 ) -> None:
-    print(
-        "km_logs [test_sign_cmd.py] (test_sign_al_max_elements_tx) - device: ",
-        backend.device,
-    )
-    if backend.device.type == DeviceType.NANOX:
-        tx_blob = encode_transaction(txAlMaxElementsNanoX)
-    else:
-        tx_blob = encode_transaction(txAlMaxElementsOtherDevices)
+    tx_blob = encode_transaction(txAlMaxElements)
 
     sign_tx_and_verify(
         tx_blob,

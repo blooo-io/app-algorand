@@ -21,7 +21,6 @@ extern "C" {
 
 #include <stdint.h>
 #include <stddef.h>
-#include "bolos_target.h"
 
 typedef enum tx_type_e {
     TX_UNKNOWN,
@@ -166,11 +165,7 @@ typedef struct {
 #define MAX_FOREIGN_APPS   8
 #define MAX_FOREIGN_ASSETS 8
 
-#if defined(TARGET_NANOX)
-#define MAX_ACCESS_LIST_ELEMENTS 7
-#else
 #define MAX_ACCESS_LIST_ELEMENTS 16
-#endif
 
 #define MAX_APPROV_LEN 128
 #define MAX_CLEAR_LEN  32
@@ -258,14 +253,10 @@ typedef struct {
     const uint8_t *cprog;
     uint16_t app_args_len[MAX_ARG];
 
-    union {
-        struct {
-            uint64_t foreign_apps[MAX_FOREIGN_APPS];
-            uint64_t foreign_assets[MAX_FOREIGN_ASSETS];
-            box boxes[MAX_FOREIGN_APPS];
-        } foreign;
-        access_list_element access_list[MAX_ACCESS_LIST_ELEMENTS];
-    };
+    uint64_t foreign_apps[MAX_FOREIGN_APPS];
+    uint64_t foreign_assets[MAX_FOREIGN_ASSETS];
+    box boxes[MAX_FOREIGN_APPS];
+
     uint8_t num_access_list_element;
     uint8_t access_list_display_offset;  // Display position offset for access_list items
 
