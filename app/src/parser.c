@@ -254,7 +254,7 @@ static parser_error_t parser_printAccessList(parser_context_t *c, char *outKey, 
     // Use _getAccessListElement to retrieve the element from the transaction buffer
     CHECK_ERROR(_getAccessListElement(c, &element, element_index));
 
-    char buff[87] = {0};  // Public key + plus sign + uint64_t + null terminator = 65 + 1 + 20 + 1 = 87
+    char buff[81] = {0};  // Public key + plus sign + uint64_t + null terminator = 59 + 1 + 20 + 1 = 81
     size_t temp_offset = 0;
     // This is used to store a simple element that is referenced inside a complex element
     access_list_element sub_element = {0};
