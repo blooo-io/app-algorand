@@ -258,7 +258,6 @@ typedef struct {
     box boxes[MAX_FOREIGN_APPS];
 
     // Access List
-    // uint8_t size_access_list;
     uint8_t num_elements_to_display;
     uint8_t num_empty_refs;
     uint8_t indexes_to_display[MAX_ACCESS_LIST_ELEMENTS];
