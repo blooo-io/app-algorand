@@ -22,6 +22,7 @@
 #include "coin.h"
 #include "crypto_utils.h"
 #include "apdu_codes.h"
+#include "parser_txdef.h"
 #include "zxformat.h"
 #include "zxerror.h"
 #include "jsmn.h"
@@ -969,38 +970,51 @@ __Z_INLINE parser_error_t _readAccessListElement(parser_context_t *c, access_lis
     }
     return parser_ok;
 }
-
-parser_error_t _readAccessListSize(parser_context_t *c, uint8_t *numAccessListElements, uint8_t maxAccessListElements)
+parser_error_t _readAccessListSize(parser_context_t *c, uint8_t *sizeAccessList)
 {
-    CHECK_ERROR(_readArraySize(c, numAccessListElements))
-    if (*numAccessListElements > maxAccessListElements) {
-        return parser_msgpack_array_too_big;
+        CHECK_ERROR(_readArraySize(c, sizeAccessList))
+        if (*sizeAccessList > MAX_ACCESS_LIST_ELEMENTS) {
+                return parser_msgpack_array_too_big;
     }
-    return parser_ok;
+        return parser_ok;
 }
 
-parser_error_t _getAccessListElement(parser_context_t *c, access_list_element *out_element, uint8_t in_element_idx,
-                                     uint8_t in_total_elements)
+parser_error_t _getAccessListElement(parser_context_t *c, access_list_element *out_element, uint8_t in_element_idx)
 {
-    uint8_t tmp_num_access_list_elements = 0;
+        uint8_t sizeAccessList = 0;
     CHECK_ERROR(_findKey(c, KEY_APP_ACCESS_LIST))
-    CHECK_ERROR(_readAccessListSize(c, &tmp_num_access_list_elements, in_total_elements))
-    if (tmp_num_access_list_elements != in_total_elements || in_element_idx >= in_total_elements) {
-        return parser_unexpected_number_items;
+        CHECK_ERROR(_readAccessListSize(c, &sizeAccessList))
+    if (in_element_idx >= sizeAccessList) {
+                return parser_unexpected_number_items;
     }
     // Read until we get the right access list element index
-    for (uint8_t i = 0; i < in_element_idx + 1; i++) {
-        CHECK_ERROR(_readAccessListElement(c, out_element))
-    }
-    return parser_ok;
+        for (uint8_t i = 0; i < in_element_idx + 1; i++) {
+                CHECK_ERROR(_readAccessListElement(c, out_element))
+            }
+        return parser_ok;
 }
 
-parser_error_t _verifyAccessList(parser_context_t *c, uint8_t *num_al_elements, uint8_t maxNumAccessListElement)
+parser_error_t _verifyAccessList(parser_context_t *c, uint8_t *numElementsToDisplay, uint8_t *numEmptyRefs, uint8_t indexesToDisplay[])
 {
     access_list_element tmpElement = {0};
-    CHECK_ERROR(_readAccessListSize(c, num_al_elements, maxNumAccessListElement))
-    for (uint8_t i = 0; i < *num_al_elements; i++) {
+    bool found_empty_ref = false;
+    uint8_t num_acces_list_elements = 0;
+    CHECK_ERROR(_readAccessListSize(c, &num_acces_list_elements))
+    for (uint8_t i = 0; i < num_acces_list_elements; i++) {
         CHECK_ERROR(_readAccessListElement(c, &tmpElement))
+        if (tmpElement.type == ACCESS_LIST_EMPTY) {
+(*numEmptyRefs)++;
+            if (!found_empty_ref) {
+                indexesToDisplay[*numElementsToDisplay] = i;
+(*numElementsToDisplay)++;
+                found_empty_ref = true;
+            }
+        }
+        else {
+            indexesToDisplay[*numElementsToDisplay] = i;
+(*numElementsToDisplay)++;
+
+        }
     }
     return parser_ok;
 }
@@ -1315,7 +1329,9 @@ static parser_error_t _readTxApplication(parser_context_t *c, parser_tx_t *v)
     application->aprog_len = 0;
     application->cprog_len = 0;
     application->reject_version = 0;
-    application->num_access_list_element = 0;
+    application->num_empty_refs = 0;
+    application->num_elements_to_display = 0;
+    memset(application->indexes_to_display, 0, sizeof(application->indexes_to_display));
     application->access_list_display_offset = 0;
 
     if (_findKey(c, KEY_APP_ID) == parser_ok) {
@@ -1336,9 +1352,9 @@ static parser_error_t _readTxApplication(parser_context_t *c, parser_tx_t *v)
     }
 
     if (_findKey(c, KEY_APP_ACCESS_LIST) == parser_ok) {
-        CHECK_ERROR(_verifyAccessList(c, &application->num_access_list_element, MAX_ACCESS_LIST_ELEMENTS))
+                CHECK_ERROR(_verifyAccessList(c, &application->num_elements_to_display, &application->num_empty_refs, application->indexes_to_display ))
         application->access_list_display_offset = tx_num_items;
-        DISPLAY_ITEM(IDX_ACCESS_LIST, application->num_access_list_element, tx_num_items)
+                DISPLAY_ITEM(IDX_ACCESS_LIST,application->num_elements_to_display, tx_num_items)
     }
 
     if (_findKey(c, KEY_APP_BOXES) == parser_ok) {
