@@ -257,7 +257,10 @@ typedef struct {
     uint64_t foreign_assets[MAX_FOREIGN_ASSETS];
     box boxes[MAX_FOREIGN_APPS];
 
-    uint8_t num_access_list_element;
+    // Access List
+    uint8_t num_elements_to_display;
+    uint8_t num_empty_refs;
+    uint8_t indexes_to_display[MAX_ACCESS_LIST_ELEMENTS];
     uint8_t access_list_display_offset;  // Display position offset for access_list items
 
 } txn_application;
