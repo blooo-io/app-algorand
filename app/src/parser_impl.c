@@ -972,29 +972,30 @@ __Z_INLINE parser_error_t _readAccessListElement(parser_context_t *c, access_lis
 }
 parser_error_t _readAccessListSize(parser_context_t *c, uint8_t *sizeAccessList)
 {
-        CHECK_ERROR(_readArraySize(c, sizeAccessList))
-        if (*sizeAccessList > MAX_ACCESS_LIST_ELEMENTS) {
-                return parser_msgpack_array_too_big;
+    CHECK_ERROR(_readArraySize(c, sizeAccessList))
+    if (*sizeAccessList > MAX_ACCESS_LIST_ELEMENTS) {
+        return parser_msgpack_array_too_big;
     }
-        return parser_ok;
+    return parser_ok;
 }
 
 parser_error_t _getAccessListElement(parser_context_t *c, access_list_element *out_element, uint8_t in_element_idx)
 {
-        uint8_t sizeAccessList = 0;
+    uint8_t sizeAccessList = 0;
     CHECK_ERROR(_findKey(c, KEY_APP_ACCESS_LIST))
-        CHECK_ERROR(_readAccessListSize(c, &sizeAccessList))
+    CHECK_ERROR(_readAccessListSize(c, &sizeAccessList))
     if (in_element_idx >= sizeAccessList) {
-                return parser_unexpected_number_items;
+        return parser_unexpected_number_items;
     }
     // Read until we get the right access list element index
-        for (uint8_t i = 0; i < in_element_idx + 1; i++) {
-                CHECK_ERROR(_readAccessListElement(c, out_element))
-            }
-        return parser_ok;
+    for (uint8_t i = 0; i < in_element_idx + 1; i++) {
+        CHECK_ERROR(_readAccessListElement(c, out_element))
+    }
+    return parser_ok;
 }
 
-parser_error_t _verifyAccessList(parser_context_t *c, uint8_t *numElementsToDisplay, uint8_t *numEmptyRefs, uint8_t indexesToDisplay[])
+parser_error_t _verifyAccessList(parser_context_t *c, uint8_t *numElementsToDisplay, uint8_t *numEmptyRefs,
+                                 uint8_t indexesToDisplay[])
 {
     access_list_element tmpElement = {0};
     bool found_empty_ref = false;
@@ -1003,17 +1004,15 @@ parser_error_t _verifyAccessList(parser_context_t *c, uint8_t *numElementsToDisp
     for (uint8_t i = 0; i < num_acces_list_elements; i++) {
         CHECK_ERROR(_readAccessListElement(c, &tmpElement))
         if (tmpElement.type == ACCESS_LIST_EMPTY) {
-(*numEmptyRefs)++;
+            (*numEmptyRefs)++;
             if (!found_empty_ref) {
                 indexesToDisplay[*numElementsToDisplay] = i;
-(*numElementsToDisplay)++;
+                (*numElementsToDisplay)++;
                 found_empty_ref = true;
             }
-        }
-        else {
+        } else {
             indexesToDisplay[*numElementsToDisplay] = i;
-(*numElementsToDisplay)++;
-
+            (*numElementsToDisplay)++;
         }
     }
     return parser_ok;
@@ -1352,9 +1351,10 @@ static parser_error_t _readTxApplication(parser_context_t *c, parser_tx_t *v)
     }
 
     if (_findKey(c, KEY_APP_ACCESS_LIST) == parser_ok) {
-                CHECK_ERROR(_verifyAccessList(c, &application->num_elements_to_display, &application->num_empty_refs, application->indexes_to_display ))
+        CHECK_ERROR(_verifyAccessList(c, &application->num_elements_to_display, &application->num_empty_refs,
+                                      application->indexes_to_display))
         application->access_list_display_offset = tx_num_items;
-                DISPLAY_ITEM(IDX_ACCESS_LIST,application->num_elements_to_display, tx_num_items)
+        DISPLAY_ITEM(IDX_ACCESS_LIST, application->num_elements_to_display, tx_num_items)
     }
 
     if (_findKey(c, KEY_APP_BOXES) == parser_ok) {
