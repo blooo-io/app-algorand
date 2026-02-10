@@ -1343,20 +1343,6 @@ static parser_error_t _readTxApplication(parser_context_t *c, parser_tx_t *v)
     }
     DISPLAY_ITEM(IDX_ON_COMPLETION, 1, tx_num_items)
 
-    if (_findKey(c, KEY_APP_REJECT_VERSION) == parser_ok) {
-        CHECK_ERROR(_readInteger(c, &application->reject_version))
-        if (application->reject_version > 0) {
-            DISPLAY_ITEM(IDX_REJECT_VERSION, 1, tx_num_items)
-        }
-    }
-
-    if (_findKey(c, KEY_APP_ACCESS_LIST) == parser_ok) {
-        CHECK_ERROR(_verifyAccessList(c, &application->num_elements_to_display, &application->num_empty_refs,
-                                      application->indexes_to_display))
-        application->access_list_display_offset = tx_num_items;
-        DISPLAY_ITEM(IDX_ACCESS_LIST, application->num_elements_to_display, tx_num_items)
-    }
-
     if (_findKey(c, KEY_APP_BOXES) == parser_ok) {
         CHECK_ERROR(_readBoxes(c, application->boxes, &application->num_boxes))
         DISPLAY_ITEM(IDX_BOXES, application->num_boxes, tx_num_items)
@@ -1393,6 +1379,19 @@ static parser_error_t _readTxApplication(parser_context_t *c, parser_tx_t *v)
         if (app_args_total_len > MAX_ARGLEN) {
             return parser_unexpected_number_items;
         }
+    }
+
+    if (_findKey(c, KEY_APP_REJECT_VERSION) == parser_ok) {
+        CHECK_ERROR(_readInteger(c, &application->reject_version))
+        if (application->reject_version > 0) {
+            DISPLAY_ITEM(IDX_REJECT_VERSION, 1, tx_num_items)
+        }
+    }
+    if (_findKey(c, KEY_APP_ACCESS_LIST) == parser_ok) {
+        CHECK_ERROR(_verifyAccessList(c, &application->num_elements_to_display, &application->num_empty_refs,
+                                      application->indexes_to_display))
+        application->access_list_display_offset = tx_num_items;
+        DISPLAY_ITEM(IDX_ACCESS_LIST, application->num_elements_to_display, tx_num_items)
     }
 
     if (_findKey(c, KEY_APP_GLOBAL_SCHEMA) == parser_ok) {
