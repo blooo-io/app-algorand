@@ -41,6 +41,7 @@ from .data import (
     txAlHoldingMissingAssetIndex,
     txAlLocalsMissingAddressIndex,
     txAlLocalsMissingApplicationIndex,
+    txAppArgsWithAl,
 )
 
 
@@ -817,3 +818,19 @@ def test_sign_tx_refused(
     # Assert that we have received a refusal
     assert e.value.status == Errors.SW_COMMAND_NOT_ALLOWED_EF
     assert len(e.value.data) == 0
+
+
+def test_sign_tx_app_args_with_al(
+    backend: BackendInterface,
+    navigator: Navigator,
+    test_name: str,
+    default_screenshot_path: str,
+) -> None:
+    """Test signing a transaction with application arguments and access list."""
+    sign_tx_and_verify(
+        txAppArgsWithAl,
+        backend,
+        navigator,
+        test_name,
+        default_screenshot_path,
+    )
