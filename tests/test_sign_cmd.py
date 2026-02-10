@@ -45,16 +45,21 @@ from .data import (
 )
 
 
-# In these tests we check the behavior of the device when asked to sign a transaction
+"""
+Transaction signing tests for Algorand Ledger application.
 
-# Account ID for the test
+These tests verify the device behavior when signing various transaction types,
+ensuring correct on-screen display and valid signature generation.
+"""
+
+# Account ID used for all tests
 ACCOUNT_ID = 123
 
-# Navigate instructions for Nano Devices
+# Navigation instructions for Nano devices (S+, X)
 NANO_NAVIGATE_INSTRUCTIONS = NavInsID.RIGHT_CLICK
 NANO_VALIDATE_INSTRUCTIONS = [NavInsID.BOTH_CLICK]
 
-# Navigate instructions for Devices with touch screens
+# Navigation instructions for touch screen devices (Stax, Flex, Gen 5/Apex P)
 TOUCH_NAVIGATE_INSTRUCTIONS = NavInsID.SWIPE_CENTER_TO_LEFT
 TOUCH_VALIDATE_INSTRUCTIONS = [NavInsID.USE_CASE_REVIEW_CONFIRM]
 TOUCH_REJECT_INSTRUCTIONS = [
@@ -88,21 +93,20 @@ def sign_tx_and_verify(
     Raises:
         AssertionError: If the signature verification fails
     """
-    # Use the app interface instead of raw interface
+    # Initialize the Algorand command sender client
     client = AlgorandCommandSender(backend)
 
-    # Get the public key of the device (for verifying the signature)
+    # Retrieve the public key from the device for signature verification
     rapdu = client.get_address_and_public_key(account_id=ACCOUNT_ID)
     _, public_key, _, _ = unpack_get_public_key_response(rapdu.data)
 
-    # Create the transaction to sign
-    # Handle both list of integers and hex string formats
+    # Convert transaction to bytes (handle both hex string and list formats)
     if isinstance(tx_to_sign, str):
         transaction_blob = bytes.fromhex(tx_to_sign)
     else:
         transaction_blob = bytes(tx_to_sign)
 
-    # Set navigate and validate instructions based on the device
+    # Configure navigation instructions based on device type
     if backend.device.is_nano:
         navigate_instructions = NANO_NAVIGATE_INSTRUCTIONS
         validate_instructions = NANO_VALIDATE_INSTRUCTIONS
@@ -112,11 +116,9 @@ def sign_tx_and_verify(
         validate_instructions = TOUCH_VALIDATE_INSTRUCTIONS
         text_to_search = "Sign"
 
-    # Send the sign device instruction.
-    # As it requires on-screen validation, the function is asynchronous.
-    # It will yield the result when the navigation is done
+    # Send transaction to device for signing (asynchronous operation requiring user confirmation)
     with client.sign_tx(account_id=ACCOUNT_ID, transaction=transaction_blob):
-        # Validate the on-screen request by performing the navigation appropriate for this device
+        # Navigate through the approval flow and capture screenshots for comparison
         navigator.navigate_until_text_and_compare(
             navigate_instructions,
             validate_instructions,
@@ -125,19 +127,18 @@ def sign_tx_and_verify(
             test_name,
         )
 
-    # The device as yielded the result, parse it and ensure that the signature is correct
+    # Retrieve the signature and verify its validity
     signature = client.get_async_response().data
     assert check_tx_signature_validity(public_key, signature, transaction_blob)
 
 
-# In this test we send to the device a Sign Asset Freeze transaction to sign and validate it on screen
-# We will ensure that the displayed information is correct by using screenshots comparison
 def test_sign_asset_freeze_tx(
     backend: BackendInterface,
     navigator: Navigator,
     test_name: str,
     default_screenshot_path: str,
 ) -> None:
+    """Test signing an asset freeze transaction."""
     sign_tx_and_verify(
         txAssetFreeze,
         backend,
@@ -147,14 +148,13 @@ def test_sign_asset_freeze_tx(
     )
 
 
-# In this test we send to the device a Sign Asset Transfer transaction to sign and validate it on screen
-# We will ensure that the displayed information is correct by using screenshots comparison
 def test_sign_asset_transfer_tx(
     backend: BackendInterface,
     navigator: Navigator,
     test_name: str,
     default_screenshot_path: str,
 ) -> None:
+    """Test signing an asset transfer transaction."""
     sign_tx_and_verify(
         txAssetXfer,
         backend,
@@ -164,14 +164,13 @@ def test_sign_asset_transfer_tx(
     )
 
 
-# In this test we send to the device a Sign Asset Config transaction to sign and validate it on screen
-# We will ensure that the displayed information is correct by using screenshots comparison
 def test_sign_asset_config_tx(
     backend: BackendInterface,
     navigator: Navigator,
     test_name: str,
     default_screenshot_path: str,
 ) -> None:
+    """Test signing an asset configuration transaction."""
     sign_tx_and_verify(
         txAssetConfig,
         backend,
@@ -181,14 +180,13 @@ def test_sign_asset_config_tx(
     )
 
 
-# In this test we send to the device a Sign Key Registration transaction to sign and validate it on screen
-# We will ensure that the displayed information is correct by using screenshots comparison
 def test_sign_keyreg_tx(
     backend: BackendInterface,
     navigator: Navigator,
     test_name: str,
     default_screenshot_path: str,
 ) -> None:
+    """Test signing a key registration transaction."""
     sign_tx_and_verify(
         txKeyreg,
         backend,
@@ -198,14 +196,13 @@ def test_sign_keyreg_tx(
     )
 
 
-# In this test we send to the device a Sign Payment transaction to sign and validate it on screen
-# We will ensure that the displayed information is correct by using screenshots comparison
 def test_sign_payment_tx(
     backend: BackendInterface,
     navigator: Navigator,
     test_name: str,
     default_screenshot_path: str,
 ) -> None:
+    """Test signing a payment transaction."""
     sign_tx_and_verify(
         txPayment,
         backend,
@@ -215,14 +212,13 @@ def test_sign_payment_tx(
     )
 
 
-# In this test we send to the device a Sign Application transaction to sign and validate it on screen
-# We will ensure that the displayed information is correct by using screenshots comparison
 def test_sign_application_tx(
     backend: BackendInterface,
     navigator: Navigator,
     test_name: str,
     default_screenshot_path: str,
 ) -> None:
+    """Test signing an application call transaction."""
     sign_tx_and_verify(
         txApplication,
         backend,
@@ -232,15 +228,13 @@ def test_sign_application_tx(
     )
 
 
-# In this test we send to the device a Sign Asset Freeze and Sign Application transaction to sign and validate it on screen
-# We will ensure that the displayed information is correct by using screenshots comparison
 def test_sign_asset_freeze_and_application_tx(
     backend: BackendInterface,
     navigator: Navigator,
     test_name: str,
     default_screenshot_path: str,
 ) -> None:
-
+    """Test signing two transactions sequentially: asset freeze and application call."""
     sign_tx_and_verify(
         txAssetFreeze,
         backend,
@@ -258,14 +252,13 @@ def test_sign_asset_freeze_and_application_tx(
     )
 
 
-# In this test we send to the device a Sign a long Application transaction to sign and validate it on screen
-# We will ensure that the displayed information is correct by using screenshots comparison
 def test_sign_application_long_tx(
     backend: BackendInterface,
     navigator: Navigator,
     test_name: str,
     default_screenshot_path: str,
 ) -> None:
+    """Test signing a long application transaction with many fields."""
     sign_tx_and_verify(
         txApplicationLong,
         backend,
@@ -275,35 +268,36 @@ def test_sign_application_long_tx(
     )
 
 
-# In this test we send to the device a Sign a long Application transaction to sign and skip some of the validation steps
-# This test is only for devices with buttons (Nano S, S+, X)
-# We will ensure that the displayed information is correct by using screenshots comparison
 def test_sign_application_long_shortcut_tx(
     backend: BackendInterface,
     navigator: Navigator,
     test_name: str,
     default_screenshot_path: str,
 ) -> None:
-
-    # Skip the test if the device is not a Nano S, S+, X
+    """Test signing a long application transaction using shortcut mode (Nano devices only).
+    
+    This test enables expert mode and shortcut mode, then signs a long application
+    transaction by skipping fields and directly approving.
+    """
+    # Skip test for touch screen devices (only Nano devices support shortcut mode)
     if not backend.device.is_nano:
         pytest.skip("This test is only for devices with buttons (Nano S, S+, X)")
         return
 
-    # Instructions to enable expert mode and shortcut mode
+    # Navigation sequence to enable expert mode and shortcut mode
     enable_shortcut_mode_instructions = [
         NavInsID.RIGHT_CLICK,
-        NavInsID.BOTH_CLICK,  # enable expert mode
+        NavInsID.BOTH_CLICK,  # Enable expert mode
         NavInsID.RIGHT_CLICK,
-        NavInsID.BOTH_CLICK,  # enable shortcut mode
-        NavInsID.RIGHT_CLICK,
-        NavInsID.RIGHT_CLICK,
+        NavInsID.BOTH_CLICK,  # Enable shortcut mode
         NavInsID.RIGHT_CLICK,
         NavInsID.RIGHT_CLICK,
         NavInsID.RIGHT_CLICK,
-        NavInsID.BOTH_CLICK,  # enable shortcut mode
+        NavInsID.RIGHT_CLICK,
+        NavInsID.RIGHT_CLICK,
+        NavInsID.BOTH_CLICK,  # Confirm shortcut mode
     ]
-    # Navigate and compare the screenshots
+    # Navigate through settings and capture screenshots
     navigator.navigate_and_compare(
         default_screenshot_path,
         test_name,
@@ -311,36 +305,33 @@ def test_sign_application_long_shortcut_tx(
         screen_change_before_first_instruction=False,
     )
 
-    # Use the app interface instead of raw interface
+    # Initialize the Algorand command sender client
     client = AlgorandCommandSender(backend)
 
-    # Get the public key of the device (for verifying the signature)
+    # Retrieve the public key from the device for signature verification
     rapdu = client.get_address_and_public_key(account_id=ACCOUNT_ID)
     _, public_key, _, _ = unpack_get_public_key_response(rapdu.data)
 
-    # Create the transaction to sign
-    # Handle both list of integers and hex string formats
+    # Convert transaction to bytes (handle both hex string and list formats)
     if isinstance(txApplicationLong, str):
         transaction_blob = bytes.fromhex(txApplicationLong)
     else:
         transaction_blob = bytes(txApplicationLong)
 
-    # Set navigate and validate instructions based on the device
+    # Configure navigation instructions for Nano devices
     navigate_instructions = NANO_NAVIGATE_INSTRUCTIONS
     validate_instructions = NANO_VALIDATE_INSTRUCTIONS
     text_to_search = "APPROVE"
 
+    # Navigation sequence to skip fields and approve
     skip_and_approve_instructions = [
         NavInsID.RIGHT_CLICK,
-        NavInsID.BOTH_CLICK,  # click on skip fields
-        NavInsID.BOTH_CLICK,  # click on approve
+        NavInsID.BOTH_CLICK,  # Skip fields
+        NavInsID.BOTH_CLICK,  # Approve
     ]
 
-    # Send the sign device instruction.
-    # As it requires on-screen validation, the function is asynchronous.
-    # It will yield the result when the navigation is done
+    # Send transaction to device for signing (asynchronous operation requiring user confirmation)
     with client.sign_tx(account_id=ACCOUNT_ID, transaction=transaction_blob):
-
         navigator.navigate_and_compare(
             default_screenshot_path,
             test_name,
@@ -349,20 +340,18 @@ def test_sign_application_long_shortcut_tx(
             snap_start_idx=11,
         )
 
-    # The device as yielded the result, parse it and ensure that the signature is correct
+    # Retrieve the signature and verify its validity
     signature = client.get_async_response().data
     assert check_tx_signature_validity(public_key, signature, transaction_blob)
 
 
-# In this test we send to the device a Sign APRV transaction to sign and validate it on screen
-# We will ensure that the displayed information is correct by using screenshots comparison
 def test_sign_aprv_tx(
     backend: BackendInterface,
     navigator: Navigator,
     test_name: str,
     default_screenshot_path: str,
 ) -> None:
-
+    """Test signing an APRV (app reject version) transaction."""
     tx_blob = encode_transaction(txAprv)
 
     sign_tx_and_verify(
@@ -374,15 +363,13 @@ def test_sign_aprv_tx(
     )
 
 
-# In this test we send to the device a Sign Access list with address resource transaction to sign and validate it on screen
-# We will ensure that the displayed information is correct by using screenshots comparison
 def test_sign_al_address_tx(
     backend: BackendInterface,
     navigator: Navigator,
     test_name: str,
     default_screenshot_path: str,
 ) -> None:
-
+    """Test signing a transaction with access list containing address resources."""
     tx_blob = encode_transaction(txAlAddress)
 
     sign_tx_and_verify(
@@ -394,15 +381,13 @@ def test_sign_al_address_tx(
     )
 
 
-# In this test we send to the device a Sign Access list with holding resource transaction to sign and validate it on screen
-# We will ensure that the displayed information is correct by using screenshots comparison
 def test_sign_al_holding_tx(
     backend: BackendInterface,
     navigator: Navigator,
     test_name: str,
     default_screenshot_path: str,
 ) -> None:
-
+    """Test signing a transaction with access list containing holding resources."""
     tx_blob = encode_transaction(txAlHolding)
 
     sign_tx_and_verify(
@@ -414,15 +399,13 @@ def test_sign_al_holding_tx(
     )
 
 
-# In this test we send to the device a Sign Access list with multiple address resources transaction to sign and validate it on screen
-# We will ensure that the displayed information is correct by using screenshots comparison
 def test_sign_al_multiple_addresses_tx(
     backend: BackendInterface,
     navigator: Navigator,
     test_name: str,
     default_screenshot_path: str,
 ) -> None:
-
+    """Test signing a transaction with access list containing multiple address resources."""
     tx_blob = encode_transaction(txAlMultipleAddresses)
 
     sign_tx_and_verify(
@@ -434,18 +417,17 @@ def test_sign_al_multiple_addresses_tx(
     )
 
 
-# In this test we send to the device a Sign Access list with multiple holding resources transaction to sign and validate it on screen
-# We will ensure that the displayed information is correct by using screenshots comparison
 def test_sign_al_multiple_holdings_tx(
     backend: BackendInterface,
     navigator: Navigator,
     test_name: str,
     default_screenshot_path: str,
 ) -> None:
-
+    """Test signing a transaction with access list containing multiple holding resources."""
     tx_blob = encode_transaction(txMultipleHoldings)
 
-    print("Notre tx encoder ressemble a ca: 0x", tx_blob.hex())
+    # Debug output for encoded transaction
+    print("Encoded transaction: 0x", tx_blob.hex())
 
     sign_tx_and_verify(
         tx_blob,
@@ -456,15 +438,13 @@ def test_sign_al_multiple_holdings_tx(
     )
 
 
-# In this test we send to the device a Sign Access list with asset resource to sign and validate it on screen
-# We will ensure that the displayed information is correct by using screenshots comparison
 def test_sign_al_asset_tx(
     backend: BackendInterface,
     navigator: Navigator,
     test_name: str,
     default_screenshot_path: str,
 ) -> None:
-
+    """Test signing a transaction with access list containing asset resources."""
     tx_blob = encode_transaction(txAlAsset)
 
     sign_tx_and_verify(
@@ -476,15 +456,13 @@ def test_sign_al_asset_tx(
     )
 
 
-# In this test we send to the device a Sign Access list with application resource to sign and validate it on screen
-# We will ensure that the displayed information is correct by using screenshots comparison
 def test_sign_al_application_tx(
     backend: BackendInterface,
     navigator: Navigator,
     test_name: str,
     default_screenshot_path: str,
 ) -> None:
-
+    """Test signing a transaction with access list containing application resources."""
     tx_blob = encode_transaction(txAlApplication)
 
     sign_tx_and_verify(
@@ -496,15 +474,13 @@ def test_sign_al_application_tx(
     )
 
 
-# In this test we send to the device a Sign Access list with locals resource to sign and validate it on screen
-# We will ensure that the displayed information is correct by using screenshots comparison
 def test_sign_al_locals_tx(
     backend: BackendInterface,
     navigator: Navigator,
     test_name: str,
     default_screenshot_path: str,
 ) -> None:
-
+    """Test signing a transaction with access list containing local resources."""
     tx_blob = encode_transaction(txAlLocals)
 
     sign_tx_and_verify(
@@ -516,15 +492,13 @@ def test_sign_al_locals_tx(
     )
 
 
-# In this test we send to the device a Sign Access list with box resource to sign and validate it on screen
-# We will ensure that the displayed information is correct by using screenshots comparison
 def test_sign_al_box_tx(
     backend: BackendInterface,
     navigator: Navigator,
     test_name: str,
     default_screenshot_path: str,
 ) -> None:
-
+    """Test signing a transaction with access list containing box resources."""
     tx_blob = encode_transaction(txAlBox)
 
     sign_tx_and_verify(
@@ -536,15 +510,13 @@ def test_sign_al_box_tx(
     )
 
 
-# In this test we send to the device a Sign Access list with empty box reference to sign and validate it on screen
-# We will ensure that the displayed information is correct by using screenshots comparison
 def test_sign_al_empty_box_ref_tx(
     backend: BackendInterface,
     navigator: Navigator,
     test_name: str,
     default_screenshot_path: str,
 ) -> None:
-
+    """Test signing a transaction with access list containing an empty box reference."""
     tx_blob = encode_transaction(txAlEmptyBoxRef)
 
     sign_tx_and_verify(
@@ -556,15 +528,13 @@ def test_sign_al_empty_box_ref_tx(
     )
 
 
-# In this test we send to the device a Sign Access list with mixed resources (address, asset, application, empty) to sign and validate it on screen
-# We will ensure that the displayed information is correct by using screenshots comparison
 def test_sign_al_mixed_resources_tx(
     backend: BackendInterface,
     navigator: Navigator,
     test_name: str,
     default_screenshot_path: str,
 ) -> None:
-
+    """Test signing a transaction with access list containing mixed resource types (address, asset, application, empty)."""
     tx_blob = encode_transaction(txAlMixedResources)
 
     sign_tx_and_verify(
@@ -576,15 +546,13 @@ def test_sign_al_mixed_resources_tx(
     )
 
 
-# In this test we send to the device a Sign Access list with box and locals resources together to sign and validate it on screen
-# We will ensure that the displayed information is correct by using screenshots comparison
 def test_sign_al_mixed_with_box_and_locals_tx(
     backend: BackendInterface,
     navigator: Navigator,
     test_name: str,
     default_screenshot_path: str,
 ) -> None:
-
+    """Test signing a transaction with access list containing both box and local resources."""
     tx_blob = encode_transaction(txAlMixedWithBoxAndLocals)
 
     sign_tx_and_verify(
@@ -596,14 +564,13 @@ def test_sign_al_mixed_with_box_and_locals_tx(
     )
 
 
-# In this test we send to the device a Sign Access list with  11 or 16 elements (maximum valid for NanoX|Other Devices) to sign and validate it on screen
-# We will ensure that the displayed information is correct by using screenshots comparison
 def test_sign_al_max_elements_tx(
     backend: BackendInterface,
     navigator: Navigator,
     test_name: str,
     default_screenshot_path: str,
 ) -> None:
+    """Test signing a transaction with access list at maximum capacity (16 elements)."""
     tx_blob = encode_transaction(txAlMaxElements)
 
     sign_tx_and_verify(
@@ -615,15 +582,13 @@ def test_sign_al_max_elements_tx(
     )
 
 
-# In this test we send to the device a Sign Access list with multiple asset references to sign and validate it on screen
-# We will ensure that the displayed information is correct by using screenshots comparison
 def test_sign_al_multiple_assets_tx(
     backend: BackendInterface,
     navigator: Navigator,
     test_name: str,
     default_screenshot_path: str,
 ) -> None:
-
+    """Test signing a transaction with access list containing multiple asset ressources."""
     tx_blob = encode_transaction(txAlMultipleAssets)
 
     sign_tx_and_verify(
@@ -635,15 +600,13 @@ def test_sign_al_multiple_assets_tx(
     )
 
 
-# In this test we send to the device a Sign Access list with multiple application references to sign and validate it on screen
-# We will ensure that the displayed information is correct by using screenshots comparison
 def test_sign_al_multiple_applications_tx(
     backend: BackendInterface,
     navigator: Navigator,
     test_name: str,
     default_screenshot_path: str,
 ) -> None:
-
+    """Test signing a transaction with access list containing multiple application ressources."""
     tx_blob = encode_transaction(txAlMultipleApplications)
 
     sign_tx_and_verify(
@@ -655,15 +618,13 @@ def test_sign_al_multiple_applications_tx(
     )
 
 
-# In this test we send to the device a Sign Access list with holding and locals resources together to sign and validate it on screen
-# We will ensure that the displayed information is correct by using screenshots comparison
 def test_sign_al_complex_mix_holding_and_locals_tx(
     backend: BackendInterface,
     navigator: Navigator,
     test_name: str,
     default_screenshot_path: str,
 ) -> None:
-
+    """Test signing a transaction with access list containing a complex mix of holding and local resources."""
     tx_blob = encode_transaction(txAlComplexMixHoldingAndLocals)
 
     sign_tx_and_verify(
@@ -675,12 +636,10 @@ def test_sign_al_complex_mix_holding_and_locals_tx(
     )
 
 
-# In this test we send to the device a Sign Access list with 12 elements (exceeds maximum of 11)
-# We expect this to fail with a parsing error
 def test_sign_al_over_max_elements_tx(
     backend: BackendInterface,
 ) -> None:
-
+    """Test that access list with too many elements (17, exceeds maximum of 16) fails with parsing error."""
     client = AlgorandCommandSender(backend)
 
     tx_blob = encode_transaction(txAlOverMaxElements)
@@ -689,12 +648,8 @@ def test_sign_al_over_max_elements_tx(
         with client.sign_tx(account_id=ACCOUNT_ID, transaction=tx_blob):
             pass
 
-    # Assert that we have received a parsing failure error
+    # Verify that a data invalid error was returned
     assert e.value.status == Errors.SW_DATA_INVALID
-
-
-# In this test we send a holding resource missing the address index (d)
-# We will ensure that the displayed information is correct by using screenshots comparison
 
 
 def test_sign_al_holding_missing_address_index_tx(
@@ -703,7 +658,7 @@ def test_sign_al_holding_missing_address_index_tx(
     test_name: str,
     default_screenshot_path: str,
 ) -> None:
-
+    """Test signing a transaction with holding resource missing the address index (d field)."""
     tx_blob = encode_transaction(txAlHoldingMissingAddressIndex)
 
     sign_tx_and_verify(
@@ -715,17 +670,13 @@ def test_sign_al_holding_missing_address_index_tx(
     )
 
 
-# In this test we send a holding resource missing the asset index (s)
-# We will ensure that the displayed information is correct by using screenshots comparison
-
-
 def test_sign_al_holding_missing_asset_index_tx(
     backend: BackendInterface,
     navigator: Navigator,
     test_name: str,
     default_screenshot_path: str,
 ) -> None:
-
+    """Test signing a transaction with holding resource missing the asset index (s field)."""
     tx_blob = encode_transaction(txAlHoldingMissingAssetIndex)
 
     sign_tx_and_verify(
@@ -737,17 +688,13 @@ def test_sign_al_holding_missing_asset_index_tx(
     )
 
 
-# In this test we send a locals resource missing the address index (d)
-# We will ensure that the displayed information is correct by using screenshots comparison
-
-
 def test_sign_al_locals_missing_address_index_tx(
     backend: BackendInterface,
     navigator: Navigator,
     test_name: str,
     default_screenshot_path: str,
 ) -> None:
-
+    """Test signing a transaction with local resource missing the address index (d field)."""
     tx_blob = encode_transaction(txAlLocalsMissingAddressIndex)
 
     sign_tx_and_verify(
@@ -759,17 +706,13 @@ def test_sign_al_locals_missing_address_index_tx(
     )
 
 
-# In this test we send a locals resource missing the application index (p)
-# We will ensure that the displayed information is correct by using screenshots comparison
-
-
 def test_sign_al_locals_missing_application_index_tx(
     backend: BackendInterface,
     navigator: Navigator,
     test_name: str,
     default_screenshot_path: str,
 ) -> None:
-
+    """Test signing a transaction with local resource missing the application index (p field)."""
     tx_blob = encode_transaction(txAlLocalsMissingApplicationIndex)
 
     sign_tx_and_verify(
@@ -780,22 +723,20 @@ def test_sign_al_locals_missing_application_index_tx(
         default_screenshot_path,
     )
 
-
-# Transaction signature refused test
-# The test will ask for a transaction signature that will be refused on screen
 def test_sign_tx_refused(
     backend: BackendInterface,
     navigator: Navigator,
     test_name: str,
     default_screenshot_path: str,
 ) -> None:
-    # Use the app interface instead of raw interface
+    """Test that rejecting a transaction signature returns the expected error."""
+    # Initialize the Algorand command sender client
     client = AlgorandCommandSender(backend)
 
     # Create the transaction to sign
     transaction = bytes(txAssetFreeze)
 
-    # Set navigate and validate instructions based on the device
+    # Configure navigation instructions based on device type
     if backend.device.is_nano:
         navigate_instructions = NANO_NAVIGATE_INSTRUCTIONS
         validate_instructions = NANO_VALIDATE_INSTRUCTIONS
@@ -815,7 +756,7 @@ def test_sign_tx_refused(
                 test_name,
             )
 
-    # Assert that we have received a refusal
+    # Verify that the rejection error was returned
     assert e.value.status == Errors.SW_COMMAND_NOT_ALLOWED_EF
     assert len(e.value.data) == 0
 
