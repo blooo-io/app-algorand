@@ -770,7 +770,7 @@ __attribute__((noinline)) static parser_error_t parser_printTxApplication(parser
         }
         return parser_ok;
 
-        case IDX_ON_COMPLETION:
+    case IDX_ON_COMPLETION:
         snprintf(outKey, outKeyLen, "On completion");
         switch (application->oncompletion) {
         case NOOPOC:
@@ -854,7 +854,7 @@ __attribute__((noinline)) static parser_error_t parser_printTxApplication(parser
         return parser_ok;
     }
 
-case IDX_REJECT_VERSION:
+    case IDX_REJECT_VERSION:
         snprintf(outKey, outKeyLen, "Reject version");
         if (application->reject_version > 0) {
             if (uint64_to_str(outVal, outValLen, application->reject_version) != NULL) {
@@ -867,7 +867,7 @@ case IDX_REJECT_VERSION:
 
     case IDX_ACCESS_LIST:
         return parser_printAccessList(ctx, outKey, outKeyLen, outVal, outValLen, displayIdx, pageIdx, pageCount,
-                                    application);
+                                      application);
 
     case IDX_GLOBAL_SCHEMA:
         snprintf(outKey, outKeyLen, "Global schema");
