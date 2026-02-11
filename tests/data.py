@@ -824,4 +824,21 @@ txAlComplexMixHoldingAndLocals = {
 }
 
 # Application arguments and access list
-txAppArgsWithAl = "8aa2616c9181a173cd0457a46170616191c40474657374a461706170c4030c8101a461707375c4030c8101a3666565cd03e8a26676cd0218a26768c420809e27594fd03406e7f27749f3310eb9f235e298e851cb6d49fcf885116673c8a26c76cd0600a3736e64c4208aa8532d0f3c6ec62f023396a481af88784e330fd4291bc8b5583dfd91ccfbbaa474797065a46170706c"
+txAppArgsWithAl = {
+  "al": [
+    {"s": 1111}
+  ],
+  "apaa": [
+    base64.b64decode("dGVzdA==")
+  ],
+  "apap": base64.b64decode("DIEB"),
+  "apsu": base64.b64decode("DIEB"),
+  "fee": 1000,
+  "fv": 536,
+  "gh": base64.b64decode("t9fO3Zr2fsmd8Dg+0HkTKwX9dkf73CViBarLDH2hLtw="),
+  "lv": 1536,
+  "snd": address_to_public_key(
+    "ALICE7Y2JOFGG2VGUC64VINB75PI56O6M2XW233KG2I3AIYJFUD4QMYTJM"
+  ),
+  "type": "appl"
+}
