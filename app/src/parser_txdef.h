@@ -359,13 +359,13 @@ typedef enum {
     IDX_FOREIGN_ASSET,
     IDX_ACCOUNTS,
     IDX_APP_ARGS,
+    IDX_REJECT_VERSION,
+    IDX_ACCESS_LIST,
     IDX_GLOBAL_SCHEMA,
     IDX_LOCAL_SCHEMA,
     IDX_EXTRA_PAGES,
     IDX_APPROVE,
     IDX_CLEAR,
-    IDX_REJECT_VERSION,
-    IDX_ACCESS_LIST
 } txn_application_index_e;
 
 typedef enum {
