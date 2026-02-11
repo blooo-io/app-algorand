@@ -768,8 +768,9 @@ def test_sign_tx_app_args_with_al(
     default_screenshot_path: str,
 ) -> None:
     """Test signing a transaction with application arguments and access list."""
+    tx_blob = encode_transaction(txAppArgsWithAl)
     sign_tx_and_verify(
-        txAppArgsWithAl,
+        tx_blob,
         backend,
         navigator,
         test_name,
