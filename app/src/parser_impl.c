@@ -22,6 +22,7 @@
 #include "coin.h"
 #include "crypto_utils.h"
 #include "apdu_codes.h"
+#include "parser_txdef.h"
 #include "zxformat.h"
 #include "zxerror.h"
 #include "jsmn.h"
@@ -827,6 +828,11 @@ __Z_INLINE parser_error_t _readBoxElement(parser_context_t *c, box *box)
     uint8_t key[2] = {0};
     uint16_t mapSize = 0;
     CHECK_ERROR(_readMapSize(c, &mapSize))
+    if (mapSize > 2) {
+        PRINTF("Box map size should be at most 2 but got %d\n", mapSize);
+        return parser_msgpack_array_too_big;
+    }
+
     box->i = 0;
     box->n_len = 0;
     box->n = NULL;
@@ -835,7 +841,6 @@ __Z_INLINE parser_error_t _readBoxElement(parser_context_t *c, box *box)
         CHECK_ERROR(_readString(c, key, sizeof(key)))
         if (strncmp((char *)key, KEY_APP_BOX_INDEX, sizeof(KEY_APP_BOX_INDEX)) == 0) {
             CHECK_ERROR(_readUInt8(c, &box->i))
-
         } else if (strncmp((char *)key, KEY_APP_BOX_NAME, sizeof(KEY_APP_BOX_NAME)) == 0) {
             CHECK_ERROR(_getPointerBin(c, &box->n, &box->n_len))
 
@@ -861,6 +866,155 @@ parser_error_t _readBoxes(parser_context_t *c, box boxes[], uint8_t *num_element
         CHECK_ERROR(_readBoxElement(c, &boxes[j]))
     }
 
+    return parser_ok;
+}
+
+__Z_INLINE parser_error_t _readHoldingElement(parser_context_t *c, holding *holding)
+{
+    uint8_t key[2] = {0};
+    uint16_t mapSize = 0;
+    CHECK_ERROR(_readMapSize(c, &mapSize))
+    if (mapSize > 2) {
+        PRINTF("Holding map size should be at most 2 but got %d\n", mapSize);
+        return parser_msgpack_array_too_big;
+    }
+    holding->d = 0;
+    holding->s = 0;
+
+    for (uint16_t index = 0; index < mapSize; index++) {
+        CHECK_ERROR(_readString(c, key, sizeof(key)))
+        switch (key[0]) {
+        case KEY_APP_ADDRESS[0]:  // 'd'
+            CHECK_ERROR(_readUInt8(c, &holding->d));
+            break;
+        case KEY_APP_ASSET[0]:  // 's'
+            CHECK_ERROR(_readUInt8(c, &holding->s));
+            break;
+        default:
+            return parser_unexpected_error;
+        }
+    }
+
+    return parser_ok;
+}
+
+__Z_INLINE parser_error_t _readLocalElement(parser_context_t *c, local *local)
+{
+    uint8_t key[2] = {0};
+    uint16_t mapSize = 0;
+    CHECK_ERROR(_readMapSize(c, &mapSize))
+    if (mapSize > 2) {
+        PRINTF("Local map size should be at most 2 but got %d\n", mapSize);
+        return parser_msgpack_array_too_big;
+    }
+    local->d = 0;
+    local->p = 0;
+
+    for (uint16_t index = 0; index < mapSize; index++) {
+        CHECK_ERROR(_readString(c, key, sizeof(key)))
+        switch (key[0]) {
+        case KEY_APP_ADDRESS[0]:  // 'd'
+            CHECK_ERROR(_readUInt8(c, &local->d));
+            break;
+        case KEY_APP_APP[0]:  // 'p'
+            CHECK_ERROR(_readUInt8(c, &local->p));
+            break;
+        default:
+            return parser_unexpected_error;
+        }
+    }
+
+    return parser_ok;
+}
+
+__Z_INLINE parser_error_t _readAccessListElement(parser_context_t *c, access_list_element *element)
+{
+    uint16_t mapSize = 0;
+    uint8_t key[2] = {0};
+    CHECK_ERROR(_readMapSize(c, &mapSize));
+    if (mapSize == 0) {
+        element->type = ACCESS_LIST_EMPTY;
+        return parser_ok;
+    }
+    //  read a one character string
+    CHECK_ERROR(_readString(c, key, sizeof(key)));
+    // check if the string match a key
+    // figure key: (s|d|p|b|h|l)
+    switch (key[0]) {
+    case KEY_APP_ASSET[0]:  // 's'
+        element->type = ACCESS_LIST_ASSET;
+        CHECK_ERROR(_readInteger(c, &element->asset));
+        break;
+    case KEY_APP_ADDRESS[0]:  // 'd'
+        element->type = ACCESS_LIST_ADDRESS;
+        CHECK_ERROR(_readBinFixed(c, element->address, 32));
+        break;
+    case KEY_APP_APP[0]:  // 'p'
+        element->type = ACCESS_LIST_APP;
+        CHECK_ERROR(_readInteger(c, &element->app));
+        break;
+    case KEY_APP_BOX[0]:  // 'b'
+        element->type = ACCESS_LIST_BOX;
+        CHECK_ERROR(_readBoxElement(c, &element->box));
+        break;
+    case KEY_APP_HOLDING[0]:  // 'h'
+        element->type = ACCESS_LIST_HOLDING;
+        CHECK_ERROR(_readHoldingElement(c, &element->holding));
+        break;
+    case KEY_APP_LOCAL[0]:  // 'l'
+        element->type = ACCESS_LIST_LOCAL;
+        CHECK_ERROR(_readLocalElement(c, &element->local));
+        break;
+    default:
+        return parser_unexpected_error;
+    }
+    return parser_ok;
+}
+parser_error_t _readAccessListSize(parser_context_t *c, uint8_t *sizeAccessList)
+{
+    CHECK_ERROR(_readArraySize(c, sizeAccessList))
+    if (*sizeAccessList > MAX_ACCESS_LIST_ELEMENTS) {
+        return parser_msgpack_array_too_big;
+    }
+    return parser_ok;
+}
+
+parser_error_t _getAccessListElement(parser_context_t *c, access_list_element *out_element, uint8_t in_element_idx)
+{
+    uint8_t sizeAccessList = 0;
+    CHECK_ERROR(_findKey(c, KEY_APP_ACCESS_LIST))
+    CHECK_ERROR(_readAccessListSize(c, &sizeAccessList))
+    if (in_element_idx >= sizeAccessList) {
+        return parser_unexpected_number_items;
+    }
+    // Read until we get the right access list element index
+    for (uint8_t i = 0; i < in_element_idx + 1; i++) {
+        CHECK_ERROR(_readAccessListElement(c, out_element))
+    }
+    return parser_ok;
+}
+
+parser_error_t _verifyAccessList(parser_context_t *c, uint8_t *numElementsToDisplay, uint8_t *numEmptyRefs,
+                                 uint8_t indexesToDisplay[])
+{
+    access_list_element tmpElement = {0};
+    bool found_empty_ref = false;
+    uint8_t num_acces_list_elements = 0;
+    CHECK_ERROR(_readAccessListSize(c, &num_acces_list_elements))
+    for (uint8_t i = 0; i < num_acces_list_elements; i++) {
+        CHECK_ERROR(_readAccessListElement(c, &tmpElement))
+        if (tmpElement.type == ACCESS_LIST_EMPTY) {
+            (*numEmptyRefs)++;
+            if (!found_empty_ref) {
+                indexesToDisplay[*numElementsToDisplay] = i;
+                (*numElementsToDisplay)++;
+                found_empty_ref = true;
+            }
+        } else {
+            indexesToDisplay[*numElementsToDisplay] = i;
+            (*numElementsToDisplay)++;
+        }
+    }
     return parser_ok;
 }
 
@@ -1173,6 +1327,11 @@ static parser_error_t _readTxApplication(parser_context_t *c, parser_tx_t *v)
     application->oncompletion = NOOPOC;
     application->aprog_len = 0;
     application->cprog_len = 0;
+    application->reject_version = 0;
+    application->num_empty_refs = 0;
+    application->num_elements_to_display = 0;
+    memset(application->indexes_to_display, 0, sizeof(application->indexes_to_display));
+    application->access_list_display_offset = 0;
 
     if (_findKey(c, KEY_APP_ID) == parser_ok) {
         CHECK_ERROR(_readInteger(c, &application->id))
@@ -1220,6 +1379,19 @@ static parser_error_t _readTxApplication(parser_context_t *c, parser_tx_t *v)
         if (app_args_total_len > MAX_ARGLEN) {
             return parser_unexpected_number_items;
         }
+    }
+
+    if (_findKey(c, KEY_APP_REJECT_VERSION) == parser_ok) {
+        CHECK_ERROR(_readInteger(c, &application->reject_version))
+        if (application->reject_version > 0) {
+            DISPLAY_ITEM(IDX_REJECT_VERSION, 1, tx_num_items)
+        }
+    }
+    if (_findKey(c, KEY_APP_ACCESS_LIST) == parser_ok) {
+        CHECK_ERROR(_verifyAccessList(c, &application->num_elements_to_display, &application->num_empty_refs,
+                                      application->indexes_to_display))
+        application->access_list_display_offset = tx_num_items;
+        DISPLAY_ITEM(IDX_ACCESS_LIST, application->num_elements_to_display, tx_num_items)
     }
 
     if (_findKey(c, KEY_APP_GLOBAL_SCHEMA) == parser_ok) {
