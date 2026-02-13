@@ -2024,6 +2024,18 @@ uint16_t parser_mapParserErrorToSW(parser_error_t err)
     }
 }
 
+/**
+ * @brief Return a human-readable description for a parser error code.
+ *
+ * This function maps each value of ::parser_error_t to a constant,
+ * null-terminated C string that can be used for logging, debugging,
+ * or displaying error messages to the user.
+ *
+ * @param err  The parser error code to describe.
+ * @return     Pointer to a static read-only string describing @p err.
+ *             The pointer is never NULL. Unrecognized error codes are
+ *             mapped to a generic description via the default case.
+ */
 const char *parser_getErrorDescription(parser_error_t err)
 {
     switch (err) {
