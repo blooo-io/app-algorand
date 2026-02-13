@@ -1314,8 +1314,29 @@ static parser_error_t _readTxAssetConfig(parser_context_t *c, parser_tx_t *v)
     return parser_ok;
 }
 
+/**
+ * @brief Parse an application transaction from the parser context.
+ *
+ * This function reads the fields of an application transaction (such as
+ * boxes, foreign applications and assets, accounts, application arguments,
+ * approval/clear programs, and related metadata) from the parser context
+ * and stores them into v->application. It also prepares the list of
+ * elements that will later be shown to the user on the device by
+ * resetting the global tx_num_items counter.
+ *
+ * The function initializes all fields of the txn_application structure to
+ * safe default values before attempting to parse any optional components,
+ * so that missing or malformed fields do not leave partially initialized
+ * data in the transaction object.
+ *
+ * @param c Parsing context pointing to the encoded transaction data.
+ * @param v Parsed transaction structure where the application data is stored.
+ * @return parser_ok on success, or an error code if parsing fails.
+ */
 static parser_error_t _readTxApplication(parser_context_t *c, parser_tx_t *v)
 {
+    // Reset the number of UI items for this transaction and initialize
+    // all application-specific fields to known defaults before parsing.
     tx_num_items = 0;
     txn_application *application = &v->application;
     application->num_boxes = 0;
