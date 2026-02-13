@@ -355,7 +355,7 @@ parser_error_t _readInteger(parser_context_t *c, uint64_t *value)
     uint8_t intType = 0;
     CHECK_ERROR(_readBytes(c, &intType, 1))
 
-    if (intType >= FIXINT_0 && intType <= FIXINT_127) {
+    if (intType <= FIXINT_127) {
         *value = intType - FIXINT_0;
         return parser_ok;
     }
