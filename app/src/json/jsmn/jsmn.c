@@ -37,6 +37,7 @@ static int jsmn_parse_primitive(jsmn_parser *parser, const char *js, const size_
 {
     jsmntok_t *token;
     int start;
+    int result = 0;
 
     start = parser->pos;
 
@@ -59,15 +60,21 @@ static int jsmn_parse_primitive(jsmn_parser *parser, const char *js, const size_
             break;
         }
         if (js[parser->pos] < 32 || js[parser->pos] >= 127) {
-            parser->pos = start;
-            return JSMN_ERROR_INVAL;
+            result = JSMN_ERROR_INVAL;
+            goto error;
         }
     }
 #ifdef JSMN_STRICT
     /* In strict mode primitive must be followed by a comma/object/array */
-    parser->pos = start;
-    return JSMN_ERROR_PART;
+    result = JSMN_ERROR_PART;
+    goto error;
 #endif
+
+error:
+    if (result != 0) {
+        parser->pos = start;
+        return result;
+    }
 
 found:
     if (tokens == NULL) {
