@@ -100,7 +100,7 @@ static int jsmn_parse_string(jsmn_parser *parser, const char *js, const size_t l
     /* Skip starting quote */
     parser->pos++;
 
-    for (; parser->pos < len && js[parser->pos] != '\0'; parser->pos++) {
+    while (parser->pos < len && js[parser->pos] != '\0') {
         char c = js[parser->pos];
 
         /* Quote: end of string */
@@ -156,6 +156,8 @@ static int jsmn_parse_string(jsmn_parser *parser, const char *js, const size_t l
                 return JSMN_ERROR_INVAL;
             }
         }
+
+        parser->pos++;
     }
     parser->pos = start;
     return JSMN_ERROR_PART;
