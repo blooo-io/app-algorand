@@ -327,6 +327,7 @@ static inline CborError validate_tag(CborValue *it, CborTag tag, uint32_t flags,
     const size_t knownTagCount = sizeof(knownTagData) / sizeof(knownTagData[0]);
     const struct KnownTagData *tagData = knownTagData;
     const struct KnownTagData * const knownTagDataEnd = knownTagData + knownTagCount;
+    const struct KnownTagData *foundTagData = NULL;
 
     if (!recursionLeft)
         return CborErrorNestingTooDeep;
@@ -337,12 +338,13 @@ static inline CborError validate_tag(CborValue *it, CborTag tag, uint32_t flags,
     for ( ; tagData != knownTagDataEnd; ++tagData) {
         if (tagData->tag < tag)
             continue;
-        if (tagData->tag > tag)
-            tagData = NULL;
+        if (tagData->tag == tag)
+            foundTagData = tagData;
         break;
     }
     if (tagData == knownTagDataEnd)
         tagData = NULL;
+    tagData = foundTagData;
 
     if (flags & CborValidateNoUnknownTags && !tagData) {
         /* tag not found */
