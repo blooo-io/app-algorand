@@ -214,7 +214,7 @@ struct CborEncoder
 };
 typedef struct CborEncoder CborEncoder;
 
-static const size_t CborIndefiniteLength = SIZE_MAX;
+#define CborIndefiniteLength SIZE_MAX
 
 CBOR_API void cbor_encoder_init(CborEncoder *encoder, uint8_t *buffer, size_t size, int flags);
 CBOR_API CborError cbor_encode_uint(CborEncoder *encoder, uint64_t value);
