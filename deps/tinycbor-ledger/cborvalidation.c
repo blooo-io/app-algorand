@@ -513,6 +513,41 @@ static CborError validate_container(CborValue *it, int containerType, uint32_t f
     return CborNoError;
 }
 
+static CborError validate_string_item(CborValue *it, CborType type, uint32_t flags)
+{
+    CborError err;
+    size_t n = 0;
+    const void *ptr;
+
+    err = _cbor_value_prepare_string_iteration(it);
+    if (err)
+        return err;
+
+    while (1) {
+        CborValue next;
+        err = _cbor_value_get_string_chunk(it, &ptr, &n, &next);
+        if (err)
+            return err;
+        if (ptr) {
+            err = validate_number(it, type, flags);
+            if (err)
+                return err;
+        }
+
+        *it = next;
+        if (!ptr)
+            break;
+
+        if (type == CborTextStringType && (flags & CborValidateUtf8)) {
+            err = validate_utf8_string(ptr, n);
+            if (err)
+                return err;
+        }
+    }
+
+    return CborNoError;
+}
+
 static CborError validate_value(CborValue *it, uint32_t flags, int recursionLeft)
 {
     CborError err;
@@ -555,35 +590,9 @@ static CborError validate_value(CborValue *it, uint32_t flags, int recursionLeft
 
     case CborByteStringType:
     case CborTextStringType: {
-        size_t n = 0;
-        const void *ptr;
-
-        err = _cbor_value_prepare_string_iteration(it);
+        err = validate_string_item(it, type, flags);
         if (err)
             return err;
-
-        while (1) {
-            CborValue next;
-            err = _cbor_value_get_string_chunk(it, &ptr, &n, &next);
-            if (err)
-                return err;
-            if (ptr) {
-                err = validate_number(it, type, flags);
-                if (err)
-                    return err;
-            }
-
-            *it = next;
-            if (!ptr)
-                break;
-
-            if (type == CborTextStringType && flags & CborValidateUtf8) {
-                err = validate_utf8_string(ptr, n);
-                if (err)
-                    return err;
-            }
-        }
-
         return CborNoError;
     }
 
